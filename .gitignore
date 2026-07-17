@@ -1,0 +1,19 @@
+# LaTeX intermediate files
+*.aux
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.xdv
+
+# Generated bibliography and document output
+/main.bbl
+/main.pdf
+
+# Editor and OS files
+*.swp
+*~
+.DS_Store

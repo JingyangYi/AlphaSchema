@@ -1,0 +1,58 @@
+\section{Preliminary}
+\label{sec:preliminary}
+
+\subsection{Alpha Mining}
+
+Consider \(N\) tradable assets observed over \(T\) trading dates. At date \(t\),
+the market state is represented by \(X_t\in\mathbb{R}^{N\times D}\), where rows
+index assets and columns index observable market features. An \emph{alpha factor}
+is an executable mapping
+\[
+  f \colon X_{t-\tau+1:t} \;\longrightarrow\; v_t \in \mathbb{R}^{N},
+\]
+which maps a lookback window of length \(\tau\) to a cross-sectional signal
+\(v_t\).
+
+A factor pool \(\mathcal{F}=\{f_1,\ldots,f_K\}\) is combined by a downstream model
+\(g\) to produce predictions \(\hat y_t=g(f_1(X_{t-\tau+1:t}),\ldots,
+f_K(X_{t-\tau+1:t}))\). Alpha mining seeks a pool that maximizes a task objective
+\(\mathcal{J}\), such as predictive correlation or portfolio utility:
+\[
+  \mathcal{F}^{*}
+  = \arg\max_{\mathcal{F} \subseteq \mathcal{A}}\;
+    \mathcal{J}\bigl(g(\mathcal{F}), Y\bigr),
+\]
+where \(\mathcal{A}\) is the candidate factor universe and \(Y\) denotes future
+returns. Final evaluation therefore occurs on executable factors, but the search
+algorithm still must choose how candidates are represented before execution.
+
+We distinguish the \emph{execution object}, namely the runnable factor \(f\), from
+the \emph{search object}, namely the representation used for generation,
+selection, mutation, and scoring. Existing methods often use formulas, ASTs,
+programs, or trajectories as search objects. These forms are close to execution,
+but they bind feedback to implementation details and make it difficult to
+attribute success or failure to stable trading mechanisms.
+
+\subsection{Structured Semantic Plans}
+
+\method{} instead searches over structured semantic plans, which describe a
+candidate trading mechanism before code generation. A plan is a compact
+specification with five fields:
+\begin{itemize}[leftmargin=12pt, nosep]
+  \item \textbf{Event}: the market phenomenon, such as breakout, volume
+        expansion, or volatility compression;
+  \item \textbf{Context}: the reference state in which the event is
+        interpreted, such as a recent extreme, VWAP region, or cross-sectional
+        quantile;
+  \item \textbf{Qualities}: confirmation or filtering conditions, such as
+        volume confirmation, multi-horizon consistency, or outlier removal;
+  \item \textbf{Direction}: the assumed implication, such as continuation,
+        reversal, or range oscillation;
+  \item \textbf{Output}: the signal emission form, such as a continuous
+        score, event decay, or cross-sectional rank.
+\end{itemize}
+
+Thus, a plan specifies \emph{what} event is observed, \emph{where} it is
+conditioned, \emph{which} confirmations are required, \emph{what} direction is
+implied, and \emph{how} the signal is emitted. The formal notation for this
+schema space is deferred to Appendix~\ref{sec:appendix_schema_notation}. 

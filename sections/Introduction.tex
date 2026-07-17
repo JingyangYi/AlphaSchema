@@ -1,0 +1,23 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Alpha mining aims to discover trading signals that are predictive, executable, interpretable, and stable out of sample. Classical asset-pricing studies motivate factors from economic hypotheses and cross-sectional anomalies \cite{sharpe1964capital,fama1992cross,fama1993common}, while large-scale replication studies show that many apparent anomalies weaken under stricter evaluation \cite{harvey2016and,hou2020replicating}. An automated factor-mining system should therefore search efficiently while preserving economic meaning, implementation validity, and reproducible out-of-sample testing.
+
+Existing systems have greatly enlarged the candidate space. Formulaic and evolutionary methods represent factors as expressions, syntax trees, or operator programs \cite{kakushadze2016formulaic,koza1992genetic,su2022genetic,zhang2020autoalpha,cui2021alphaevolve,yu2023alphagen,shi2025alphaforge}. More recent LLM-based agents introduce planning, code generation, tree search, trajectory evolution, and guarded execution into factor discovery \cite{li2024can,tang2025alphaagent,shi2025navigating,lin2026factorengine,han2026quantaalpha,shi2026hubble,liu2025cogalpha,chen2025alphasage}. Despite this progress, most methods still optimize implementation-level objects: formulas, programs, code edits, or generated trajectories.
+
+This implementation-first design creates a semantic mismatch. Low-level search spaces are combinatorially large, and syntactic distance does not reliably reflect economic distance. Two formulas may encode the same trading mechanism, while a small implementation change may alter the market event, conditioning regime, confirmation requirement, directional hypothesis, and output form at the same time. Moreover, useful supervision is obtained only after generation, validation, materialization, and backtesting. These properties make it difficult to learn a stable search prior over \emph{which trading mechanisms} deserve future evaluation.
+
+We propose \method{}, a semantic schema-guided evolution framework that separates \emph{what to search} from \emph{how to implement it}. Instead of treating code or formulas as the primary search object, \method{} represents each candidate as a structured trading-semantic plan
+\begin{equation}
+p=(e,c,Q,d,o),
+\end{equation}
+where \(e\) denotes a market event, \(c\) its conditioning context, \(Q\) a set of quality constraints, \(d\) the directional hypothesis, and \(o\) the output form. The LLM realizes selected plans into executable factor code, while search decisions are made over the structured schema space before implementation.
+
+Operationally, \method{} maintains a reward buffer of evaluated plans and trains a LightGBM ensemble surrogate over schema features \cite{ke2017lightgbm}. For unseen plans, the surrogate estimates both predicted reward and ensemble-disagreement uncertainty. A quota selector allocates the limited implementation and backtesting budget across high-reward candidates, uncertain candidates, structurally novel candidates, and mutation-based refinements around historically strong plans. This design attaches feedback to reusable trading semantics rather than to brittle implementation artifacts.
+
+Our contributions are:
+\begin{itemize}[leftmargin=12pt]
+    \item We introduce structured trading-semantic plans as the search object for alpha mining, reducing semantic aliasing and enabling pre-implementation scoring.
+    \item We develop a reward-guided quota search mechanism that balances exploitation, uncertainty-driven exploration, structural novelty, and local refinement under limited evaluation budget.
+    \item We instantiate an end-to-end plan-to-code alpha mining pipeline with execution guards, validated factor-pool construction, and empirical analyses of schema ablations, semantic predictability, and backend robustness.
+\end{itemize}
