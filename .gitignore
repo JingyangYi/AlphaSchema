@@ -9,9 +9,8 @@
 *.toc
 *.xdv
 
-# Generated bibliography and document output
+# Generated bibliography
 /main.bbl
-/main.pdf
 
 # Editor and OS files
 *.swp

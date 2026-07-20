@@ -3,35 +3,35 @@
 
 \subsection{Alpha Mining}
 
-Consider \(N\) tradable assets observed over \(T\) trading dates. At date \(t\),
-the market state is represented by \(X_t\in\mathbb{R}^{N\times D}\), where rows
-index assets and columns index observable market features. An \emph{alpha factor}
-is an executable mapping
-\[
-  f \colon X_{t-\tau+1:t} \;\longrightarrow\; v_t \in \mathbb{R}^{N},
-\]
-which maps a lookback window of length \(\tau\) to a cross-sectional signal
-\(v_t\).
+An alpha factor is an executable mapping from historical market
+information to a cross-sectional signal:
 
-A factor pool \(\mathcal{F}=\{f_1,\ldots,f_K\}\) is combined by a downstream model
-\(g\) to produce predictions \(\hat y_t=g(f_1(X_{t-\tau+1:t}),\ldots,
-f_K(X_{t-\tau+1:t}))\). Alpha mining seeks a pool that maximizes a task objective
-\(\mathcal{J}\), such as predictive correlation or portfolio utility:
 \[
-  \mathcal{F}^{*}
-  = \arg\max_{\mathcal{F} \subseteq \mathcal{A}}\;
-    \mathcal{J}\bigl(g(\mathcal{F}), Y\bigr),
+f:X_{t-\tau+1:t}\rightarrow v_t\in\mathbb{R}^{N}.
 \]
-where \(\mathcal{A}\) is the candidate factor universe and \(Y\) denotes future
-returns. Final evaluation therefore occurs on executable factors, but the search
-algorithm still must choose how candidates are represented before execution.
 
-We distinguish the \emph{execution object}, namely the runnable factor \(f\), from
-the \emph{search object}, namely the representation used for generation,
-selection, mutation, and scoring. Existing methods often use formulas, ASTs,
-programs, or trajectories as search objects. These forms are close to execution,
-but they bind feedback to implementation details and make it difficult to
-attribute success or failure to stable trading mechanisms.
+Beyond its implementation, a factor reflects an underlying trading
+mechanism that describes a market phenomenon, its applicable conditions,
+and the expected direction of its effect. We view alpha discovery as
+the process of identifying such mechanisms and realizing them as
+executable factors.
+
+Formally, let \(z\in\mathcal{Z}\) denote a point in a trading-semantic
+space, where each \(z\) represents a structured description of a
+candidate trading mechanism. A realization function
+\[
+R:\mathcal{Z}\rightarrow\mathcal{F}
+\]
+maps semantic descriptions into executable factors. Alpha mining then
+aims to discover semantic candidates whose realizations achieve strong
+factor quality:
+
+\[
+z^*=\arg\max_{z\in\mathcal{Z}}\mathcal{J}(R(z)).
+\]
+
+This formulation separates the semantic object being explored from the
+implementation used for evaluation.
 
 \subsection{Structured Semantic Plans}
 
