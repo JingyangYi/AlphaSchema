@@ -1,1 +1,23 @@
-Automated alpha mining has recently shifted from operator- and formula-based search toward large language model (LLM) agents. However, many LLM-based systems lack an explicit exploration space and a principled search policy, relying instead on LLM agents to infer new directions through generation and self-reflection. As a result, exploration remains largely implicit and difficult to control or optimize systematically. We introduce \method{}, which constructs and explores a structured space of trading semantics for alpha mining. Each point in this space is a schema plan composed of \emph{Event}, \emph{Context}, \emph{Qualities}, \emph{Direction}, and \emph{Output}, specifying the semantics of a candidate factor before implementation. \method{} decouples exploration from realization: an LLM translates selected schema plans into executable factors, while their rewards are accumulated to learn a surrogate over the semantic space. An iterative selection policy uses this model to balance reward-seeking exploitation with uncertainty, novelty, and local refinement. Experiments on the Chinese stock market show that \method{} discovers factor pools with strong portfolio performance. Further analyses of the semantic evolution of schema plans show that \method{} dynamically explores new regions of the trading-semantic space while gradually concentrating on high-reward regions. Within our framework, the quality of discovered factors is largely decoupled from LLM capability, enabling scalable alpha mining with more economical models.
+Automated alpha mining has recently shifted from operator- and
+formula-based search toward large language model (LLM) agents. However,
+many LLM-based systems still lack an explicit semantic exploration space
+and a systematic mechanism for learning which trading ideas are worth
+evaluating, relying instead on agent-driven workflows to generate
+factors, reflect on outcomes, and propose new directions. As a result,
+exploration remains largely implicit and difficult to control or improve
+systematically. We introduce \method{}, which constructs and explores a structured space
+of trading semantics for alpha mining. Each point in this space is a
+schema plan composed of \emph{Event}, \emph{Context}, \emph{Qualities},
+\emph{Direction}, and \emph{Output}, specifying the semantics of a
+candidate factor before implementation. \method{} decouples exploration
+from realization: an LLM translates selected schema plans into
+executable factors, while evaluated rewards are accumulated to learn a
+surrogate over the semantic space. An iterative selection policy uses
+this model to balance global exploration, surrogate-guided exploitation,
+and local mutation. Experiments on the Chinese stock market show that \method{} discovers
+factor pools with strong predictive and portfolio performance. Further
+analyses show that the semantic search trajectory explores diverse
+regions while progressively concentrating on high-reward semantic areas.
+Within our framework, aggregate factor quality is relatively robust
+across tested LLM backends, enabling scalable alpha mining with more
+economical models.

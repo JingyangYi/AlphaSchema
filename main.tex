@@ -1,8 +1,34 @@
 \documentclass[letterpaper]{article}
 \usepackage{aaai}
-\usepackage{times}
-\usepackage{helvet}
-\usepackage{courier}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage{times}
+  \usepackage{helvet}
+  \usepackage{courier}
+\else
+  \usepackage{fontspec}
+  \setmainfont{texgyretermes}[
+    Extension=.otf,
+    UprightFont=*-regular,
+    BoldFont=*-bold,
+    ItalicFont=*-italic,
+    BoldItalicFont=*-bolditalic
+  ]
+  \setsansfont{texgyreheros}[
+    Extension=.otf,
+    UprightFont=*-regular,
+    BoldFont=*-bold,
+    ItalicFont=*-italic,
+    BoldItalicFont=*-bolditalic
+  ]
+  \setmonofont{texgyrecursor}[
+    Extension=.otf,
+    UprightFont=*-regular,
+    BoldFont=*-bold,
+    ItalicFont=*-italic,
+    BoldItalicFont=*-bolditalic
+  ]
+\fi
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsfonts}
