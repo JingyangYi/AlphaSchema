@@ -135,10 +135,10 @@ plans.
 
 \subsection{Adaptive Quota-Based Plan Selection}
 
-Let \(K\) denote the number of plans evaluated in each round. We divide
-this budget among global exploration, reward-based selection, and local
-mutation. If \(n_t\) plans have been evaluated before round \(t\), the
-exploration ratio is
+Let \(B\) denote the number of plans evaluated in each search round. We
+allocate this batch across exploration, surrogate-guided exploitation,
+and local mutation. If \(n_t\) plans have been evaluated before round
+\(t\), the exploration share is
 
 \[
 \rho_t
@@ -149,34 +149,18 @@ exploration ratio is
 \exp\!\left(-\frac{n_t}{\tau}\right),
 \]
 
-where
-\[
-0\le \rho_{\min}\le \rho_{\max}\le 1,
-\qquad \tau>0.
-\]
+where \(0 \leq \rho_{\min} \leq \rho_{\max} \leq 1\) and \(\tau>0\).
+As more plans are evaluated, \(\rho_t\) gradually decreases from
+\(\rho_{\max}\) toward \(\rho_{\min}\). In practice, we precede this
+schedule with a short cold-start period in which the full batch is
+allocated to exploration. After the cold start, a fraction \(\rho_t\) of each batch
+is allocated to exploration. The remaining fraction \(1-\rho_t\) is
+divided equally between surrogate-guided exploitation and mutation.
 
-The round-wise quotas are then
-
-\[
-\begin{aligned}
-K_t^{\mathrm{explore}}
-&=\left\lfloor K\rho_t\right\rceil,\\
-K_t^{\mathrm{reward}}
-&=\left\lfloor
-\frac{K-K_t^{\mathrm{explore}}}{2}
-\right\rfloor,\\
-K_t^{\mathrm{mut}}
-&=K-K_t^{\mathrm{explore}}-K_t^{\mathrm{reward}}.
-\end{aligned}
-\]
-
-The exploration channel selects structurally novel unseen plans. The reward channel selects
-unseen plans with high surrogate-predicted rewards. The mutation channel
-selects high-reward plans from the evaluated set and modifies one schema
-component to generate local variants.
-
-As the reward buffer grows, the schedule shifts from broad exploration
-toward reward-guided selection and mutation. Mutation is particularly
-important because alpha mining aims to discover individual high-quality
-factors. It directly refines successful plans and serves as an important
-source of strong factors.
+Both exploration and surrogate-guided exploitation select unseen plans:
+the former favors structural novelty, with details provided in the
+appendix, while the latter ranks candidates by predicted reward.
+Mutation starts from evaluated high-reward plans and changes one schema
+component to generate unseen neighbors, providing a simple way to search
+locally around promising regions. This local search is particularly relevant in alpha mining, where the
+objective is to identify a small set of strong factors.

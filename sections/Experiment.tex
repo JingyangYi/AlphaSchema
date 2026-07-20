@@ -9,13 +9,38 @@ schema features predict rewards before implementation.
 \subsection{Experimental Setup}
 
 \paragraph{Dataset and Metrics.}
-Following recent Qlib-based alpha-mining studies, we use the CSI300 universe as the primary benchmark. The time span is split into training (Jan 1, 2016 -- Dec 31, 2020), validation (Jan 1, 2021 -- Dec 31, 2022), and testing (Jan 1, 2023 -- Dec 31, 2025). The prediction target is the 5-day forward close-to-close return computed from daily OHLCV-style market data. We report factor predictive metrics (IC, ICIR, RankIC, RankICIR) and strategy metrics based on benchmark-relative excess returns (AER, IR, MDD). Data-processing, trading-cost, and metric definitions are provided in Appendix~\ref{sec:appendix_eval_details}.
-
-
+Following recent Qlib-based alpha-mining studies, we use the CSI300
+universe as the primary benchmark. The data are split into training
+(Jan 1, 2016 -- Dec 31, 2020), validation (Jan 1, 2021 -- Dec 31, 2022),
+and testing (Jan 1, 2023 -- Dec 31, 2025). The prediction target is the
+5-day forward close-to-close return. We report IC, ICIR, RankIC, and
+RankICIR for predictive performance, together with benchmark-relative
+AER, IR, and MDD for portfolio evaluation. Data processing, trading
+costs, and metric definitions are provided in
+Appendix~\ref{sec:appendix_eval_details}.
 
 \paragraph{Baselines.}
-We compare against four families of baselines. \emph{Machine-learning predictors} include MLP and XGBoost \cite{chen2016xgboost}. \emph{Deep sequence models} include Transformer \cite{vaswani2017attention}, GRU \cite{cho2014learning}, and LSTM \cite{hochreiter1997long}. \emph{Open-source factor libraries} include Alpha158 and Alpha360 \cite{yang2020qlib}. \emph{Agentic mining systems} include RD-Agent \cite{li2025rdagentquant}, QuantaAlpha \cite{han2026quantaalpha}, and AlphaPROBE \cite{guo2026alphaprobe}. For reproduced agentic mining runs and \method{}, the LLM backend is fixed to the GPT-5.4-mini API under matched call and candidate-evaluation budgets. Predictor baselines are trained directly under the same train/validation/test split. Since the compared baselines do not support controlled fundamental-schema mining, we report both an OHLCV-only version of \method{} for the fair comparison and a +Fundamental version to show the additional schema modality supported by our framework.
+We compare against four baseline families. Machine-learning predictors
+include MLP and XGBoost \cite{chen2016xgboost}. Deep sequence models
+include Transformer \cite{vaswani2017attention}, GRU
+\cite{cho2014learning}, and LSTM \cite{hochreiter1997long}.
+Open-source factor libraries include Alpha158 and Alpha360
+\cite{yang2020qlib}. Agentic mining systems include RD-Agent
+\cite{li2025rdagentquant}, QuantaAlpha \cite{han2026quantaalpha}, and
+AlphaPROBE \cite{guo2026alphaprobe}. Predictor baselines use the same
+train/validation/test split.
 
+\paragraph{AlphaSchema Configuration.}
+\method{} uses DeepSeek-V4-Flash as the default code-agent backend,
+chosen for its low inference cost. Each run uses a batch size of 12
+plans for 80 rounds. The first 10 rounds form a cold-start phase using
+exploration only, after which the adaptive quota schedule gradually
+increases reward-based selection and mutation. We conduct five
+independent runs and construct the reported factor pools from their
+validated outputs using reward ranking and correlation filtering.
+The primary setting uses OHLCV and VWAP inputs, while an additional
+\textsc{+Fundamental} pool includes factors generated from fundamental
+schema fields.
 
 \subsection{Main Results}
 
@@ -31,7 +56,7 @@ We compare against four families of baselines. \emph{Machine-learning predictors
 \begin{tabular}{llcccccccc}
 \toprule
 \multirow{2}{*}{\textbf{Category}} & \multirow{2}{*}{\textbf{Method}} &
-\multirow{2}{*}{\makecell{\textbf{Fund.}\\\textbf{Schema}}} &
+\multirow{2}{*}{\makecell{\textbf{Fund.}\\\textbf{Factors}}} &
 \multicolumn{4}{c}{\textbf{Factor Predictive Power}} &
 \multicolumn{3}{c}{\textbf{Strategy Performance}} \\
 \cmidrule(lr){4-7}\cmidrule(lr){8-10}
@@ -69,8 +94,20 @@ Ours
 }
 \end{table*}
 
-The principal comparison for \method{} is not at the level of a single factor, but at the level of the exported factor pool. Table~\ref{tab:main_eval} reports factor predictive power and strategy performance under the held-out test period. Because existing baselines do not support fundamental-schema factor mining, the OHLCV-only \method{} row is the fairness-aligned comparison against prior methods. It achieves the strongest IC (0.0382) and ICIR (0.2374), while using the same broad market-data modality as the baselines. The +Fundamental row then activates an additional schema family supported by our framework and obtains the strongest portfolio-level IR (1.0877) and AER (11.94\%). This two-row reporting separates a fair like-for-like comparison from a capability demonstration: \method{} can search over fundamental accounting semantics when such data are available, whereas the compared methods cannot directly express or protect that schema during mining. LSTM attains the highest Rank IC and Rank ICIR among the listed baselines, but its strategy return remains substantially lower. This pattern suggests that the discovered factor pool is especially effective after portfolio construction: its advantage is not only cross-sectional correlation strength, but also the conversion of predictive signal into benchmark-relative excess return.
+The principal evaluation of \method{} is conducted at the factor-pool
+level. Table~\ref{tab:main_eval} reports predictive and portfolio
+performance on the held-out test period. The OHLCV setting contains 120
+discovered factors and achieves the strongest IC (0.0382) and ICIR
+(0.2374) among the compared methods.
 
+We also report a \textsc{+Fundamental} variant, which augments the OHLCV
+pool with 30 factors whose schema plans include fundamental fields. This
+expanded 150-factor pool further improves portfolio performance,
+achieving the strongest IR (1.0877) and AER (11.94\%). LSTM records the
+highest Rank IC and Rank ICIR, while \method{} performs best on several
+other predictive and portfolio metrics. Overall, the results show that
+semantic-plan search can discover useful factors and produce competitive
+downstream performance when the resulting factors are combined.
 
 
 Figure~\ref{fig:cumulative_excess_return} provides a complementary
