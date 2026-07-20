@@ -47,9 +47,9 @@ We compare against four families of baselines. \emph{Machine-learning predictors
 \midrule
 \rowcolor[RGB]{242,244,247}\multicolumn{10}{c}{\textit{\textbf{Deep Sequence Models}}} \\
 \multirow{3}{*}{\makecell[l]{Deep\\Learning}}
-& Transformer & \xmark & 0.0289 & 0.1561 & 0.0507 & 0.2775 & \second{0.6929} & \second{6.14} & 12.03\\
+& Transformer & \xmark & 0.0289 & 0.1561 & 0.0507 & 0.2775 & 0.6929 & 6.14 & 12.03\\
 & GRU & \xmark & 0.0310 & 0.1782 & \second{0.0565} & \second{0.3242} & 0.4609 & 3.73 & 13.21 \\
-& LSTM & \xmark & \second{0.0380} & \second{0.2269} & \best{0.0587} & \best{0.3521} & 0.6317 & 5.14 & 11.51 \\
+& LSTM & \xmark & \second{0.0380} & 0.2269 & \best{0.0587} & \best{0.3521} & 0.6317 & 5.14 & 11.51 \\
 \midrule
 \rowcolor[RGB]{242,244,247}\multicolumn{10}{c}{\textit{\textbf{Open-Source Factor Libraries}}} \\
 \multirow{2}{*}{\makecell[l]{Factor\\Library}}
@@ -57,37 +57,40 @@ We compare against four families of baselines. \emph{Machine-learning predictors
 & Alpha360 & \xmark & 0.0231 & 0.1710 & 0.0292 & 0.2100 & 0.4024 & 2.99 & \best{8.86} \\
 \midrule
 \rowcolor[RGB]{242,244,247}\multicolumn{10}{c}{\textit{\textbf{Agentic Mining Systems}}} \\
-\multirow{3}{*}{\makecell[l]{Agentic\\Mining}}
-& RD-Agent & \xmark & 0.0242 & 0.1494 & 0.0504 &  0.3094 & 0.9861 & 6.81 & 15.57 \\
+\multirow{2}{*}{\makecell[l]{Agentic\\Mining}}
+& RD-Agent & \xmark & 0.0242 & 0.1494 & 0.0504 &  0.3094 & \second{0.9861} & 6.81 & 15.57 \\
 & QuantaAlpha & \xmark & 0.0208 & 0.1619 & 0.0380 & 0.2934 & 0.6726 & 5.57 & 14.18 \\
 \midrule
-\multirow{2}{*}{\makecell[l]{Ours}}
-& \method{} (OHLCV) & \xmark & 0.0382 & 0.2374 & 0.0498 & 0.2912 &0.7624 & 8.53 & 18.63 \\
+Ours
+& \method{} (OHLCV) & \xmark & \best{0.0382} & \best{0.2374} & 0.0498 & 0.2912 & 0.7624 & \second{8.53} & 18.63 \\
 \rowcolor{bestblue}
-& \textbf{\method{} (+Fund.)} & \cmark & \best{0.0380} & \best{0.2365} & 0.0487 & 0.2857 & \best{1.0877} & \best{11.94} & 15.43 \\
+& \textbf{\method{} (+Fund.)} & \cmark & \second{0.0380} & \second{0.2365} & 0.0487 & 0.2857 & \best{1.0877} & \best{11.94} & 15.43 \\
 \bottomrule
 \end{tabular}
 }
 \end{table*}
 
-The principal comparison for \method{} is not at the level of a single factor, but at the level of the exported factor pool. Table~\ref{tab:main_eval} reports factor predictive power and strategy performance under the held-out test period. Because existing baselines do not support fundamental-schema factor mining, the OHLCV-only \method{} row is the fairness-aligned comparison against prior methods. It remains competitive in predictive quality, while using the same broad market-data modality as the baselines. The +Fundamental row then activates an additional schema family supported by our framework and obtains the strongest IC (0.0391), ICIR (0.2444), IR (1.0269), and AER (11.12\%). This two-row reporting separates a fair like-for-like comparison from a capability demonstration: \method{} can search over fundamental accounting semantics when such data are available, whereas the compared methods cannot directly express or protect that schema during mining. LSTM attains the highest Rank IC and Rank ICIR among the listed baselines, but its strategy return remains substantially lower. This pattern suggests that the discovered factor pool is especially effective after portfolio construction: its advantage is not only cross-sectional correlation strength, but also the conversion of predictive signal into benchmark-relative excess return.
+The principal comparison for \method{} is not at the level of a single factor, but at the level of the exported factor pool. Table~\ref{tab:main_eval} reports factor predictive power and strategy performance under the held-out test period. Because existing baselines do not support fundamental-schema factor mining, the OHLCV-only \method{} row is the fairness-aligned comparison against prior methods. It achieves the strongest IC (0.0382) and ICIR (0.2374), while using the same broad market-data modality as the baselines. The +Fundamental row then activates an additional schema family supported by our framework and obtains the strongest portfolio-level IR (1.0877) and AER (11.94\%). This two-row reporting separates a fair like-for-like comparison from a capability demonstration: \method{} can search over fundamental accounting semantics when such data are available, whereas the compared methods cannot directly express or protect that schema during mining. LSTM attains the highest Rank IC and Rank ICIR among the listed baselines, but its strategy return remains substantially lower. This pattern suggests that the discovered factor pool is especially effective after portfolio construction: its advantage is not only cross-sectional correlation strength, but also the conversion of predictive signal into benchmark-relative excess return.
 
 
 
-Figure~\ref{fig:overall_nav_comparison} provides a complementary library-level
-view of the same held-out period. It compares the exported \method{} top-150 pool
-with representative open-source factor libraries under the same
-CSRankNorm--LightGBM--Top50/Drop5 protocol. The \method{} curve recovers more
-strongly after the 2024 drawdown and finishes with the highest NAV, indicating
-that the selected factor pool converts predictive signal into a more persistent
-benchmark-relative wealth spread.
+Figure~\ref{fig:cumulative_excess_return} provides a complementary
+library-level view of the same held-out period. It compares the cumulative
+excess return of the exported \method{} top-150 pool with representative
+open-source factor libraries under the same CSRankNorm--LightGBM--Top50/Drop5
+protocol. The \method{} curve shows a more persistent benchmark-relative wealth
+spread, indicating that the selected factor pool converts predictive signal
+into stronger portfolio-level excess return.
 
-\begin{figure*}[!t]
+\begin{figure}[!t]
     \centering
-    \includegraphics[width=0.86\textwidth]{figures/overall_nav_comparison.pdf}
-    \caption{Held-out NAV comparison against representative open-source factor libraries on CSI300 over the 2023--2025 test period. All curves are evaluated under the same CSRankNorm, LightGBM combiner, and Top50/Drop5 backtest protocol.}
-    \label{fig:overall_nav_comparison}
-\end{figure*}
+    \includegraphics[width=\columnwidth]{figures/cumulative_Excess_Return.pdf}
+    \caption{Held-out cumulative excess return against representative
+    open-source factor libraries on CSI300 over the 2023--2025 test period. All
+    curves are evaluated under the same CSRankNorm, LightGBM combiner, and
+    Top50/Drop5 backtest protocol.}
+    \label{fig:cumulative_excess_return}
+\end{figure}
 
 \subsection{Ablation Study}
 
