@@ -1,24 +1,24 @@
 \section{Methodology}
 \label{sec:methodology}
 
-Building on the distinction in Section~\ref{sec:preliminary}, \method{} treats
-semantic plans as the search objects and executable factors as the evaluation
-objects. This separation is important for automated alpha discovery, where the
-candidate space is large and market feedback is noisy and non-stationary.
-Instead of searching directly over formulas or code, \method{} first explores
-interpretable trading hypotheses and only realizes selected hypotheses into
-executable factors.
+Given the trading-semantic space defined in
+Section~\ref{sec:preliminary}, \method{} performs iterative search under
+a fixed generation and backtesting budget. In each round, candidate
+plans are proposed and selected using predicted reward, uncertainty,
+novelty, and local mutation. Selected plans are realized as executable
+factors, validated, and backtested. Their rewards are added to a buffer
+to update the semantic surrogate for the next round. 
 
-The framework consists of four stages:
-(1) semantic plan construction, which samples interpretable trading hypotheses
-from a modular schema space; (2) plan-to-code realization, which converts
-selected plans into executable factors with execution safeguards; (3)
-reward-guided semantic search, which learns a surrogate model over evaluated
-plans and allocates search budget among exploitation, exploration, and local
-refinement; and (4) factor-pool consolidation, which filters validated factors
-for downstream evaluation. Figure~\ref{fig:method_overview} summarizes this
-closed-loop workflow and highlights the separation between semantic search and
-executable evaluation.
+The search loop has three components:
+(1) \emph{semantic plan proposal and selection}, which combines global
+sampling, local mutation, and quota-based allocation;
+(2) \emph{plan realization and evaluation}, which generates executable
+factors and applies execution, leakage, and backtesting checks; and
+(3) \emph{semantic reward learning}, which learns from accumulated
+plan--reward observations to score unevaluated plans.
+A separate post-search procedure removes weak or redundant factors for
+downstream evaluation. Figure~\ref{fig:method_overview} summarizes the
+closed-loop workflow.
 
 \begin{figure*}[t]
     \centering
@@ -36,102 +36,147 @@ executable evaluation.
 
 \subsection{Semantic Plan Space Construction}
 
-\method{} searches over the structured plan space described in
-Section~\ref{sec:preliminary}. The schema vocabulary can be constructed from
-domain knowledge, existing factor libraries, and empirical discoveries from
-previous runs. Unlike AST-based factor search, the schema specifies the economic
-mechanism of a candidate factor while leaving its implementation flexible.
+We instantiate a trading-semantic space using configurable vocabularies
+for events, contexts, qualities, directions, and outputs. Let these
+vocabularies be denoted by
+\(\mathcal{V}_{E}\), \(\mathcal{V}_{C}\), \(\mathcal{V}_{Q}\),
+\(\mathcal{V}_{D}\), and \(\mathcal{V}_{O}\), respectively. The resulting
+plan space is
 
-A semantic plan records the event, context, confirmation conditions,
-directional hypothesis, and signal output format. This modular representation
-creates a large combinatorial hypothesis space while preserving interpretability.
-Moreover, the active schema vocabulary can be configured for different discovery
-objectives without modifying the downstream realization and evaluation pipeline.
+\[
+\mathcal{P}
+=
+\mathcal{V}_{E}
+\times
+\mathcal{V}_{C}
+\times
+\mathcal{V}_{Q}
+\times
+\mathcal{V}_{D}
+\times
+\mathcal{V}_{O}.
+\]
+
+The vocabularies can be derived from domain expertise, academic and
+practitioner literature, existing factor libraries, and findings from
+previous discovery runs. They need not cover all trading semantics and
+can instead be configured for a target domain, such as equity
+fundamentals or futures term structure.
+
+A plan describes only trading logic, without prescribing operators,
+library functions, or numerical parameters. We also impose no
+hand-crafted compatibility rules across dimensions. Unusual or
+potentially inconsistent combinations are evaluated through code
+realization and empirical feedback, avoiding complex prior constraints
+while retaining unconventional combinations that may still produce
+useful factors.
 
 
 \subsection{Plan Realization and Execution Validation}
 
-At each round, \method{} samples unseen plans from the active schema space and
-selects a subset for implementation. For a selected plan \(p\), a code agent is
-provided with the schema specification, data contract, and implementation
-constraints, and generates a period-parameterized factor function
-\(f_p(\cdot;\tau)\).
+Given a selected plan \(p\), the code agent receives its semantic
+specification, data contract, and implementation constraints, and
+translates it into executable factor functions. The plan specifies only
+the intended trading logic; the agent independently chooses the
+operators, functional form, and numerical parameters. It implements each
+plan at a fast and a slow time scale, yielding realizations
+\(f_{p,\mathrm{fast}}\) and \(f_{p,\mathrm{slow}}\).
 
-Before backtesting, generated factors are passed through execution guards that
-verify contract compliance, computational validity, numerical stability, and
-potential look-ahead leakage. Invalid implementations are removed before reward
-computation, preventing erroneous evaluations from contaminating the search
-process.
+Before backtesting, each realization passes through execution guards
+that verify contract compliance and computational validity, test
+numerical stability, and screen for potential look-ahead leakage.
+Invalid implementations are excluded before reward computation,
+preventing erroneous results from contaminating semantic feedback.
 
+\subsection{Semantic Reward Modeling}
 
-\subsection{Reward Modeling and Adaptive Semantic Search}
-
-For search-time feedback, each valid realized factor receives a scalar reward
-computed from its backtest statistics:
+For each valid realization \(f_{p,s}\) of plan \(p\), where
+\(s\in\{\mathrm{fast},\mathrm{slow}\}\), we define
 \begin{equation}
-\begin{aligned}
-r(p)=\frac{1}{4}\bigl(
-&10\,\mathrm{IC}(p)+\mathrm{ICIR}(p) \\
-&+10\,\mathrm{RankIC}(p)+\mathrm{RankICIR}(p)
-\bigr),
-\end{aligned}
-\end{equation}
-where \(\mathrm{IC}\) and \(\mathrm{RankIC}\) denote Pearson and rank information
-coefficients, and \(\mathrm{ICIR}\) and \(\mathrm{RankICIR}\) are their
-corresponding information ratios.
-
-This reward is intentionally simple. It is used only to guide semantic search,
-not as a learned utility function or as the final paper-level evaluation metric.
-The multipliers on \(\mathrm{IC}\) and \(\mathrm{RankIC}\) are scale adjustments:
-correlation coefficients are typically an order of magnitude smaller than their
-information ratios, so rescaling prevents the averaged score from being dominated
-by ratio terms. This design follows the same practical principle as
-FactorEngine's composite fitness score over scaled predictive metrics
-\cite{lin2026factorengine}: the search loop uses a transparent screening signal,
-while final claims are reported with separate predictive and portfolio metrics.
-
-All evaluated plans are stored in a reward buffer
-\[
-\mathcal{D}_t=\{(p_i,r_i,a_i)\}_{i=1}^{N_t},
-\]
-where \(a_i\) records execution status. Each plan is encoded into structured
-schema features \(\phi(p)\). A LightGBM ensemble surrogate
-\(g_{\theta_t}\) is trained on valid entries of \(\mathcal{D}_t\) to estimate the
-expected reward of unseen plans:
-\[
-\hat r_t(p)=g_{\theta_t}(\phi(p)).
-\]
-
-For an unseen candidate \(p\), ensemble prediction provides a mean reward
-estimate \(\mu_t(p)\) and uncertainty estimate \(\sigma_t(p)\). Candidate plans
-are ranked using an upper confidence bound:
-\[
-\mathrm{UCB}_t(p)
+r_{p,s}
 =
-\mu_t(p)+\kappa_t\sigma_t(p).
-\]
-
-Since selecting only the highest-UCB candidates may still cause premature
-concentration, \method{} performs adaptive budget allocation:
+\alpha\,\mathrm{RankIC}(f_{p,s})
++\beta\,\mathrm{RankICIR}(f_{p,s})
+-\lambda\,\Delta_{\mathrm{lag}}(f_{p,s}),
+\end{equation}
+where
 \[
-K=K_{\mu}+K_{\sigma}+K_{\mathrm{novel}},
+\Delta_{\mathrm{lag}}(f)
+=
+\max\!\left\{
+0,\,
+\mathrm{RankIC}(f)-\mathrm{RankIC}(L_1f)
+\right\},
 \]
-where the three components correspond to exploitation of high predicted reward
-regions, uncertainty-driven exploration, and structural novelty over the schema
-space. Diversity constraints are applied during batch construction to avoid
-redundant evaluations.
+and \(L_1f\) denotes the signal delayed by one period. The coefficients
+\(\alpha,\beta,\lambda>0\) control predictive strength, temporal
+stability, and lag sensitivity, respectively. The plan reward is
+\[
+r(p)=\max_{s\in\{\mathrm{fast},\mathrm{slow}\}}r_{p,s}.
+\]
+Because realization is stochastic, \(r(p)\) is a noisy observation of
+plan-level quality rather than a deterministic target. Within each run, we keep the LLM backend,
+data contract, and validation pipeline fixed. The resulting realization
+policy is therefore consistent across plans, allowing the surrogate to
+learn shared reward tendencies from the growing buffer.
 
-In addition, \method{} maintains a local mutation channel that perturbs
-historically high-reward plans through schema-level modifications, such as
-changing contexts, adding or removing qualities, or replacing output forms.
-This enables efficient refinement of promising semantic neighborhoods while the
-main search process maintains global exploration.
+After each round, new plan--reward pairs are added to the reward buffer
+\[
+\mathcal{D}_t
+=
+\mathcal{D}_{t-1}
+\cup
+\{(p_i,r(p_i))\}_{i\in\mathcal{B}_t}.
+\]
+A LightGBM ensemble is retrained on the expanded buffer using structured
+plan features \(\phi(p)\), and produces a predicted reward mean
+\(\mu_t(p)\) and ensemble uncertainty \(\sigma_t(p)\) for unevaluated
+plans.
 
+\subsection{Adaptive Quota-Based Plan Selection}
 
-\subsection{Validated Factor Pool}
+Let \(K\) denote the number of plans evaluated in each round. We divide
+this budget among global exploration, reward-based selection, and local
+mutation. If \(n_t\) plans have been evaluated before round \(t\), the
+exploration ratio is
 
-After each search round, validated factors are added to the factor pool together
-with their semantic plans, implementations, and evaluation statistics. A
-diversity filter removes highly correlated or semantically redundant factors.
-The final pool is obtained from the validated candidates and is used for
-downstream portfolio evaluation.
+\[
+\rho_t
+=
+\rho_{\min}
++
+(\rho_{\max}-\rho_{\min})
+\exp\!\left(-\frac{n_t}{\tau}\right),
+\]
+
+where
+\[
+0\le \rho_{\min}\le \rho_{\max}\le 1,
+\qquad \tau>0.
+\]
+
+The round-wise quotas are then
+
+\[
+\begin{aligned}
+K_t^{\mathrm{explore}}
+&=\left\lfloor K\rho_t\right\rceil,\\
+K_t^{\mathrm{reward}}
+&=\left\lfloor
+\frac{K-K_t^{\mathrm{explore}}}{2}
+\right\rfloor,\\
+K_t^{\mathrm{mut}}
+&=K-K_t^{\mathrm{explore}}-K_t^{\mathrm{reward}}.
+\end{aligned}
+\]
+
+The exploration channel selects structurally novel unseen plans. The reward channel selects
+unseen plans with high surrogate-predicted rewards. The mutation channel
+selects high-reward plans from the evaluated set and modifies one schema
+component to generate local variants.
+
+As the reward buffer grows, the schedule shifts from broad exploration
+toward reward-guided selection and mutation. Mutation is particularly
+important because alpha mining aims to discover individual high-quality
+factors. It directly refines successful plans and serves as an important
+source of strong factors.

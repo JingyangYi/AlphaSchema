@@ -1,12 +1,11 @@
 \section{Experiments}
 \label{sec:experiment}
 
-To comprehensively evaluate \method{} as a semantic search framework for factor discovery, we address three research questions:
-\begin{enumerate}[leftmargin=*,itemsep=1pt,topsep=2pt]
-    \item[\textbf{RQ1}:] Does schema-guided semantic search improve the quality of the discovered factor pool over representative alpha mining baselines?
-    \item[\textbf{RQ2}:] Which components of \method{} contribute to its effectiveness?
-    \item[\textbf{RQ3}:] Is the framework robust across schema-to-code backends, and can the learned scorer identify promising semantic regions before implementation?
-\end{enumerate}
+We first compare the discovered factor pools with representative
+predictive models, factor libraries, and agentic mining systems. We
+then examine the contribution of individual schema components, analyze
+realization variability and code-agent robustness, and test whether
+schema features predict rewards before implementation.
 \subsection{Experimental Setup}
 
 \paragraph{Dataset and Metrics.}
@@ -15,7 +14,7 @@ Following recent Qlib-based alpha-mining studies, we use the CSI300 universe as 
 
 
 \paragraph{Baselines.}
-We compare against four families of baselines. \emph{Machine-learning predictors} include MLP and XGBoost \cite{chen2016xgboost}. \emph{Deep sequence models} include Transformer \cite{vaswani2017attention}, GRU \cite{cho2014learning}, and LSTM \cite{hochreiter1997long}. \emph{Open-source factor libraries} include Alpha158 and Alpha360 \cite{yang2020qlib}. \emph{Agentic mining systems} include RD-Agent \cite{li2025rdagentquant}, QuantaAlpha \cite{han2026quantaalpha}, and AlphaPROBE \cite{guo2026alphaprobe}. For reproduced agentic mining runs and \method{}, the LLM backend is fixed to the GPT-5.4 API under matched call and candidate-evaluation budgets. Predictor baselines are trained directly under the same train/validation/test split. Since the compared baselines do not support controlled fundamental-schema mining, we report both an OHLCV-only version of \method{} for the fair comparison and a +Fundamental version to show the additional schema modality supported by our framework.
+We compare against four families of baselines. \emph{Machine-learning predictors} include MLP and XGBoost \cite{chen2016xgboost}. \emph{Deep sequence models} include Transformer \cite{vaswani2017attention}, GRU \cite{cho2014learning}, and LSTM \cite{hochreiter1997long}. \emph{Open-source factor libraries} include Alpha158 and Alpha360 \cite{yang2020qlib}. \emph{Agentic mining systems} include RD-Agent \cite{li2025rdagentquant}, QuantaAlpha \cite{han2026quantaalpha}, and AlphaPROBE \cite{guo2026alphaprobe}. For reproduced agentic mining runs and \method{}, the LLM backend is fixed to the GPT-5.4-mini API under matched call and candidate-evaluation budgets. Predictor baselines are trained directly under the same train/validation/test split. Since the compared baselines do not support controlled fundamental-schema mining, we report both an OHLCV-only version of \method{} for the fair comparison and a +Fundamental version to show the additional schema modality supported by our framework.
 
 
 \subsection{Main Results}

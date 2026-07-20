@@ -3,56 +3,94 @@
 
 \subsection{Alpha Mining}
 
-An alpha factor is an executable mapping from historical market
-information to a cross-sectional signal:
+An alpha factor is a rule that transforms historical market information
+into a cross-sectional signal for asset ranking or prediction. Given
+\(N\) tradable assets observed over \(T\) trading dates, let
+\(X_t\in\mathbb{R}^{N\times D}\) denote the market state at date \(t\),
+where rows correspond to assets and columns correspond to observable
+market features. A factor \(f\) maps a historical window of market
+states into a signal vector:
 
 \[
-f:X_{t-\tau+1:t}\rightarrow v_t\in\mathbb{R}^{N}.
+v_t=f(X_{t-\tau+1:t}),\quad v_t\in\mathbb{R}^{N}.
 \]
 
-Beyond its implementation, a factor reflects an underlying trading
-mechanism that describes a market phenomenon, its applicable conditions,
-and the expected direction of its effect. We view alpha discovery as
-the process of identifying such mechanisms and realizing them as
-executable factors.
+Beyond its executable implementation, a factor typically reflects an
+underlying market mechanism that provides an interpretable rationale
+for its predictive relationship with future returns. Therefore, alpha
+mining involves not only finding predictive transformations, but also
+discovering meaningful mechanisms and realizing them as executable
+factors.
 
-Formally, let \(z\in\mathcal{Z}\) denote a point in a trading-semantic
-space, where each \(z\) represents a structured description of a
-candidate trading mechanism. A realization function
-\[
-R:\mathcal{Z}\rightarrow\mathcal{F}
-\]
-maps semantic descriptions into executable factors. Alpha mining then
-aims to discover semantic candidates whose realizations achieve strong
-factor quality:
+Formally, we distinguish a semantic factor plan from its executable
+realization. Let \(p\in\mathcal{P}\) denote a candidate trading-semantic
+plan, and let
 
 \[
-z^*=\arg\max_{z\in\mathcal{Z}}\mathcal{J}(R(z)).
+R:\mathcal{P}\rightarrow\Delta(\mathcal{F})
 \]
 
-This formulation separates the semantic object being explored from the
-implementation used for evaluation.
+denote a realization process that maps a semantic plan to a distribution
+over executable factors. A realized factor \(f\sim R(p)\) is evaluated by
+a factor-quality objective \(\mathcal{J}(f)\). The objective of semantic
+factor discovery can therefore be written as
+
+\[
+p^*=\arg\max_{p\in\mathcal{P}}
+\mathbb{E}_{f\sim R(p)}[\mathcal{J}(f)].
+\]
+
+A plan does not uniquely determine an executable factor: different
+realizations may adopt different operators, parameters, and functional
+forms. Thus, the objective concerns the reward distribution induced by
+a plan rather than a deterministic mapping.
 
 \subsection{Structured Semantic Plans}
 
-\method{} instead searches over structured semantic plans, which describe a
-candidate trading mechanism before code generation. A plan is a compact
-specification with five fields:
+To search over trading semantics, \method{} represents each candidate
+factor as a structured semantic plan. Rather than assuming a unique
+ontology of market mechanisms, we define a practical and expressive
+representation that captures recurring dimensions of factor
+construction. A semantic plan describes the intended trading mechanism
+before implementation and can subsequently be translated into an
+executable factor by an LLM.
+
+Formally, a semantic plan is represented as
+
+\[
+p=(e,c,Q,d,o)\in\mathcal{P},
+\]
+
+where the five dimensions jointly characterize different aspects of a
+candidate trading mechanism:
+
 \begin{itemize}[leftmargin=12pt, nosep]
-  \item \textbf{Event}: the market phenomenon, such as breakout, volume
-        expansion, or volatility compression;
-  \item \textbf{Context}: the reference state in which the event is
-        interpreted, such as a recent extreme, VWAP region, or cross-sectional
-        quantile;
-  \item \textbf{Qualities}: confirmation or filtering conditions, such as
-        volume confirmation, multi-horizon consistency, or outlier removal;
-  \item \textbf{Direction}: the assumed implication, such as continuation,
-        reversal, or range oscillation;
-  \item \textbf{Output}: the signal emission form, such as a continuous
-        score, event decay, or cross-sectional rank.
+  \item \textbf{Event}: the market phenomenon or signal-generating event
+        being captured, such as breakout, volume expansion, or volatility
+        compression;
+
+  \item \textbf{Context}: the market state or reference condition under
+        which the event is interpreted, such as a recent extreme, VWAP
+        region, volatility regime, or cross-sectional quantile;
+
+  \item \textbf{Qualities}: additional properties or validation criteria
+        that refine the mechanism, such as volume confirmation,
+        multi-horizon consistency, or outlier filtering;
+
+  \item \textbf{Direction}: the expected relationship between the
+        mechanism and future returns, such as continuation, reversal, or
+        range oscillation;
+
+  \item \textbf{Output}: the form in which the mechanism is expressed as
+        a tradable signal, such as a continuous score, event decay, or
+        cross-sectional rank.
 \end{itemize}
 
-Thus, a plan specifies \emph{what} event is observed, \emph{where} it is
-conditioned, \emph{which} confirmations are required, \emph{what} direction is
-implied, and \emph{how} the signal is emitted. The formal notation for this
-schema space is deferred to Appendix~\ref{sec:appendix_schema_notation}. 
+Together, these dimensions specify what market phenomenon is considered,
+under which conditions it is interpreted, what evidence supports it, how
+it is expected to affect future returns, and how the resulting signal is
+expressed. Unlike formula trees or sequential decision processes, a
+semantic plan does not impose a predefined ordering or compositional
+structure among these dimensions. They jointly define a point in the
+trading-semantic space, allowing exploration without introducing
+artificial constraints on the underlying market mechanisms.
