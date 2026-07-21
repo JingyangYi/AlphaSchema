@@ -6,7 +6,7 @@ Section~\ref{sec:preliminary}, \method{} performs iterative search under
 a fixed generation and backtesting budget. In each round, candidate
 plans are proposed and selected using predicted reward, uncertainty,
 novelty, and local mutation. Selected plans are realized as executable
-factors, validated, and backtested. Their rewards are added to a buffer
+factors, validated, and backtested. Their realized rewards are added to a buffer
 to update the semantic surrogate for the next round. 
 
 The search loop has three components:
@@ -114,11 +114,8 @@ stability, and lag sensitivity, respectively. The plan reward is
 \[
 r(p)=\max_{s\in\{\mathrm{fast},\mathrm{slow}\}}r_{p,s}.
 \]
-Because realization is stochastic, \(r(p)\) is a noisy observation of
-plan-level quality rather than a deterministic target. Within each run, we keep the LLM backend,
-data contract, and validation pipeline fixed. The resulting realization
-policy is therefore consistent across plans, allowing the surrogate to
-learn shared reward tendencies from the growing buffer.
+Because realization is stochastic, \(r(p)\) is an observation of
+plan-level quality rather than a deterministic target. Although repeated realizations can provide a more accurate estimate of plan quality, they also reduce the number of semantic plans that can be explored under a fixed implementation budget.
 
 After each round, new plan--reward pairs are added to the reward buffer
 \[
