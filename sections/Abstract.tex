@@ -1,23 +1,20 @@
-Automated alpha mining has recently shifted from operator- and
-formula-based search toward large language model (LLM) agents. However,
-many LLM-based systems still lack an explicit semantic exploration space
-and a systematic mechanism for learning which trading ideas are worth
-evaluating, relying instead on agent-driven workflows to generate
-factors, reflect on outcomes, and propose new directions. As a result,
-exploration remains largely implicit and difficult to control or improve
+Automated alpha mining has increasingly adopted large language model
+(LLM) agents for factor generation and iterative discovery. However,
+existing LLM-based systems often delegate both factor construction and
+search decisions to the agent itself, without an explicit exploration
+space or a principled strategy for navigating that space. As a result, exploration remains largely implicit and difficult to control or optimize
 systematically. We introduce \method{}, which constructs and explores a structured space
 of trading semantics for alpha mining. Each point in this space is a
 schema plan composed of \emph{Event}, \emph{Context}, \emph{Qualities},
 \emph{Direction}, and \emph{Output}, specifying the semantics of a
 candidate factor before implementation. \method{} decouples exploration
-from realization: an LLM translates selected schema plans into
+from implementation: an LLM translates selected schema plans into
 executable factors, while evaluated rewards are accumulated to learn a
-surrogate over the semantic space. An iterative selection policy uses
+surrogate over the semantic space. An iterative selection mechanism uses
 this model to balance global exploration, surrogate-guided exploitation,
 and local mutation. Experiments on the Chinese stock market show that \method{} discovers
 factor pools with strong predictive and portfolio performance. Further
 analyses show that the semantic search trajectory explores diverse
-regions while progressively concentrating on high-reward semantic areas.
-Within our framework, aggregate factor quality is relatively robust
-across tested LLM backends, enabling scalable alpha mining with more
-economical models.
+regions while progressively concentrating on high-reward semantic areas, and that the resulting factor pool performance remains largely consistent across tested LLM
+backends, suggesting that the framework can support scalable alpha
+mining with more economical models.
