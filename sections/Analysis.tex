@@ -43,6 +43,45 @@ model can compensate for missing semantic details, the resulting factors
 are less effective when important aspects of the trading mechanism are
 omitted.
 
+\subsection{Learnability and Navigation of the Semantic Space}
+
+We next investigate whether the trading-semantic space contains
+learnable reward structures and whether the search process can navigate
+this space effectively. The first analysis studies whether schema
+representations are predictive of factor quality. The second visualizes
+how explored plans evolve across search rounds and whether the adaptive
+search procedure discovers different semantic regions.
+
+\paragraph{Reward Predictability.}
+We collect more than 8,000 unique schema plans with realized rewards
+from historical search runs. Each plan is represented by its schema
+features, and a LightGBM surrogate is trained to predict realized factor
+quality from these semantic descriptors. The surrogate achieves a
+Spearman correlation of XX and a top-decile reward lift of XX, indicating
+that semantic composition contains predictive information about factor
+quality. These results suggest that evaluated rewards can be reused as
+search feedback beyond individual factor implementations.
+
+\paragraph{Semantic Navigation During Search.}
+To examine how \method{} explores the semantic space, we trace all schema
+plans generated during a complete search run. Each plan is converted into
+a text embedding based on its semantic description. The embeddings are
+compressed into a 50-dimensional representation using PCA, and K-means
+clustering is applied in this reduced space to identify dominant semantic
+regions. For visualization, Figure~\ref{fig:semantic_navigation}
+projects the first two principal components and highlights the dominant
+region at different search stages.
+
+The visualization shows that the search process does not remain confined
+to a single semantic region. Early rounds cover diverse regions of the
+space, while later rounds increasingly revisit regions associated with
+higher normalized rewards. At the same time, the presence of multiple
+dominant regions indicates that \method{} continues to explore distinct
+semantic mechanisms rather than collapsing into a single mode. Together,
+these results demonstrate that the trading-semantic space is both
+structured enough to support reward learning and sufficiently diverse to
+support adaptive exploration.
+
 
 \subsection{Backend Robustness Analysis}
 
