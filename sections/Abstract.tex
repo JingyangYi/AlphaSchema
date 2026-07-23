@@ -10,7 +10,8 @@ schema plan composed of \emph{Event}, \emph{Context}, \emph{Qualities},
 candidate factor before implementation. \method{} decouples exploration
 from implementation: an LLM translates selected schema plans into
 executable factors, while evaluated rewards are accumulated to learn a
-surrogate over the semantic space. An iterative selection mechanism uses
-this surrogate to balance global exploration, surrogate-guided exploitation,
+surrogate model over the semantic space. An iterative selection mechanism uses
+this model to balance global exploration, surrogate-guided exploitation,
 and local mutation. Experiments on the Chinese stock market show that \method{} discovers
-factor pools with strong predictive and portfolio performance. Further analyses show that the semantic search process navigates diverse regions while increasingly allocating evaluations toward high-reward regions, and that factors from the same schema plans exhibit comparable predictive quality across LLM backends, suggesting the feasibility of scalable alphamining with more economical models.
+factor pools with strong predictive and portfolio performance. Further analyses show that the semantic search process navigates diverse regions while increasingly allocating evaluations toward high-reward regions, and that implementations of the same schema plans by different LLMs
+exhibit comparable predictive quality, suggesting that alpha mining quality is largely robust to the choice of LLM within our framework.

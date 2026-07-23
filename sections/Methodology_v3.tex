@@ -20,19 +20,6 @@ A separate post-search procedure removes weak or redundant factors for
 downstream evaluation. Figure~\ref{fig:method_overview} summarizes the
 closed-loop workflow.
 
-\begin{figure*}[t]
-    \centering
-    \includegraphics[width=0.98\textwidth]{figures/method.pdf}
-    \caption{Overview of \method{}. The framework separates semantic search
-    from executable realization: candidate trading hypotheses are represented
-    as structured plans over event, context, qualities, direction, and output,
-    selected by a reward-guided semantic scheduler, realized into executable
-    factor code by an LLM agent, and evaluated through guarded backtesting. The
-    resulting schema--reward pairs are stored in a reward buffer and used to
-    update the schema-level scorer for subsequent selection rounds.}
-    \label{fig:method_overview}
-\end{figure*}
-
 
 \subsection{Semantic Plan Space Construction}
 

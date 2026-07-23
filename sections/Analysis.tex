@@ -46,63 +46,98 @@ omitted.
 \subsection{Learnability and Navigation of the Semantic Space}
 
 We next investigate whether the trading-semantic space contains
-learnable reward structures and whether the search process can navigate
-this space effectively. The first analysis studies whether schema
-representations are predictive of factor quality. The second visualizes
-how explored plans evolve across search rounds and whether the adaptive
-search procedure discovers different semantic regions.
+learnable reward structures and how \method{} navigates this space.
 
 \paragraph{Reward Predictability.}
-We collect more than 8,000 unique schema plans with realized rewards
-from historical search runs. Each plan is represented by its schema
-features, and a LightGBM surrogate is trained to predict realized factor
-quality from these semantic descriptors. The surrogate achieves a
-Spearman correlation of XX and a top-decile reward lift of XX, indicating
-that semantic composition contains predictive information about factor
-quality. These results suggest that evaluated rewards can be reused as
-search feedback beyond individual factor implementations.
-
-\paragraph{Semantic Navigation During Search.}
-To examine how \method{} explores the semantic space, we trace all schema
-plans generated during a complete search run. Each plan is converted into
-a text embedding based on its semantic description. The embeddings are
-compressed into a 50-dimensional representation using PCA, and K-means
-clustering is applied in this reduced space to identify dominant semantic
-regions. For visualization, Figure~\ref{fig:semantic_trajectory}
-projects the first two principal components and highlights the dominant
-region at different search stages.
-
-The visualization shows that the search process does not remain confined
-to a single semantic region. Early rounds cover diverse regions of the
-space, while later rounds increasingly revisit regions associated with
-higher normalized rewards. At the same time, the presence of multiple
-dominant regions indicates that \method{} continues to explore distinct
-semantic mechanisms rather than collapsing into a single mode. Together,
-these results demonstrate that the trading-semantic space is both
-structured enough to support reward learning and sufficiently diverse to
-support adaptive exploration.
-
-
-\subsection{Backend Robustness Analysis}
-
-We test whether schema-guided realization depends on a single implementation agent. Holding 100 schema plans fixed, six code-agent backends implement the same plans, with at most one retry for failed cases when available. Final success rates range from 82\% to 99\%, while mean \(|\mathrm{RankIC}|\) over successful implementations remains in a comparable range (0.0116--0.0168). Figure~\ref{fig:code_agent_model_invariance} separates these two effects: Panel A reports pass@1 success and repair recovery, and Panel B reports post-success signal quality. The result suggests that backend choice mainly affects execution reliability, while the semantic plan and the resulting factor function transfer across different code agents. Appendix~\ref{sec:appendix_code_agent_robustness} provides the full table.
+We collect over 8,000 schema plans with realized rewards from historical
+search runs. Each plan is encoded by one-hot semantic components and
+structural features (e.g., component counts and interactions). We split
+the collected plans into training and held-out sets and train a LightGBM
+surrogate to predict realized rewards from semantic representations. On
+the held-out set, the surrogate achieves a Spearman correlation of 0.237
+and a 1.51$\times$ top-decile reward lift, while shuffled rewards provide
+no predictive signal. These results indicate that factor quality contains
+learnable information from trading semantics.
 
 \begin{figure}[!t]
     \centering
-    \includegraphics[width=\columnwidth]{figures/code_agent_model_invariance.pdf}
-    \caption{Repair-aware robustness to code-agent backends on the same 100 schema plans. Panel A separates first-attempt implementation success from repair recovery; Panel B shows that successful implementations retain comparable signal quality across backends.}
-    \label{fig:code_agent_model_invariance}
-\end{figure}
-
-\subsection{Schema-Space Predictability Analysis}
-
-We further ask whether schema rewards are predictable before code realization. We collect 12,126 historical plan--reward pairs covering 11,295 unique schema keys and train lightweight predictors using only discrete schema features. \emph{Single schema} uses component-level indicators and category/scope counts, while \emph{Schema + pair} additionally includes pairwise component interactions. No schema text embeddings, generated code, factor values, or backtest trajectories are used as inputs.
-
-\begin{figure}[!t]
-    \centering
-    \includegraphics[width=\columnwidth]{figures/schema_space_predictability.pdf}
+    \includegraphics[width=\columnwidth]{figures/compact_learnability_spearman.pdf}
     \caption{Schema-space reward predictability.}
     \label{fig:schema_predictability}
 \end{figure}
 
-Figure~\ref{fig:schema_predictability} shows that schema-level features are predictive under this restricted setting. Panel A compares reward-ranking quality, while Panel B reports top-decile enrichment for the mean baseline, the single-schema LightGBM scorer, the pair-interaction LightGBM scorer, and the shuffled-reward control. Single-schema LightGBM reaches Spearman \(0.237\) and top-decile lift \(1.506\), while adding pair interactions improves the lift to \(1.519\). The mean baseline has no ranking ability, and the shuffled-reward control remains near random, indicating that the signal is tied to the true schema--reward association rather than model capacity alone.
+
+\paragraph{Semantic Navigation During Search.}
+To examine how \method{} navigates the semantic space, we trace all
+schema plans generated during a complete search run. Each plan is
+embedded from its semantic description and reduced to a 50-dimensional
+representation using PCA. We first cluster all plans in this space using
+K-means to identify global semantic regions. For each search stage, we
+identify the dominant region based on the distribution of generated
+plans, with temporal smoothing applied to obtain a stable region
+trajectory. Figure~\ref{fig:semantic_trajectory} visualizes all plans in
+the first two principal components, with arrows connecting the dominant
+regions across search stages.
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/semantic_trajectory.pdf}
+    \caption{Semantic-space navigation across search rounds.}
+    \label{fig:semantic_trajectory}
+\end{figure}
+
+The search process initially covers diverse semantic regions and later
+allocates more evaluations toward high-reward regions, while maintaining
+multiple active areas of exploration. These results suggest that the
+semantic space is both learnable from feedback and sufficiently
+structured for adaptive navigation.
+
+\subsection{Realization Variance and Budget Efficiency}
+
+A semantic plan induces a distribution of executable realizations rather
+than a deterministic factor. We study the trade-off between estimating
+plan quality more accurately and discovering high-quality plans under a
+limited realization budget. For each plan, repeated realizations provide
+a better estimate of its expected quality, but consume budget that could
+otherwise explore additional semantic candidates.
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/realization_efficiency.pdf}
+    \caption{Plan quality estimation and top-plan discovery efficiency.}
+    \label{fig:realization_efficiency}
+\end{figure}
+
+Using 100 schema plans with up to eight realizations, we treat the average
+reward across realizations as an approximate reference quality. Figure
+\ref{fig:realization_efficiency} shows that increasing the number of
+realizations improves ranking consistency with this reference. However,
+when normalized by the number of realizations, the efficiency of
+identifying top-quality plans decreases substantially. These results show that repeated realizations improve plan-quality
+estimation, but with diminishing returns for identifying top-quality
+plans. Thus, single realization provides a more efficient estimator for
+large-scale alpha mining, where the objective is ranking promising
+candidates rather than accurately estimating every plan's expected
+reward.
+
+
+\subsection{LLM Realization Robustness}
+
+We examine whether discovered factor quality depends on the choice of
+LLM realization model. Holding 100 schema plans fixed, six LLMs generate
+factor implementations with one retry allowed. As shown in
+Figure~\ref{fig:code_agent_model_invariance}, models differ substantially
+in Pass@1, reflecting differences in instruction following, data-contract
+compliance, and implementation validity. However, among successful
+realizations, mean \(|\mathrm{RankIC}|\) remains in a narrow range
+(0.0116--0.0168) without a monotonic relationship to model capability.
+These results suggest that LLM choice mainly affects realization
+reliability, while factor quality is largely determined by the semantic
+plan being implemented.
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/model_invariance.pdf}
+    \caption{Effect of LLM realization models on implementation success and factor quality.}
+    \label{fig:code_agent_model_invariance}
+\end{figure}
