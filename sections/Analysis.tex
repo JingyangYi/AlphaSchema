@@ -15,8 +15,6 @@ We first examine whether individual schema components provide useful
 information for factor discovery. Unless otherwise noted, all variants
 share the same LLM backend and evaluation protocol.
 
-\begin{figure}[!t] \centering \includegraphics[width=\columnwidth]{figures/schema_component_ablation.pdf} \caption{Component-wise schema ablation.} \label{fig:schema_leave_one_out} \end{figure}
-
 We select 100 complete schema plans and construct five
 leave-one-component-out variants by removing one field from
 \(\{\emph{Event}, \emph{Context}, \emph{Qualities}, \emph{Direction},
@@ -61,9 +59,21 @@ learnable information from trading semantics.
 
 \begin{figure}[!t]
     \centering
-    \includegraphics[width=\columnwidth]{figures/compact_learnability_spearman.pdf}
-    \caption{Schema-space reward predictability.}
-    \label{fig:schema_predictability}
+    \begin{subfigure}{\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/schema_component_ablation_drop.pdf}
+        \caption{Component-wise schema ablation.}
+        \label{fig:schema_leave_one_out}
+    \end{subfigure}
+    \vspace{2pt}
+    \begin{subfigure}{\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/compact_learnability_spearman.pdf}
+        \caption{Schema-space reward predictability.}
+        \label{fig:schema_predictability}
+    \end{subfigure}
+    \caption{Analysis of semantic structure and learnability.}
+    \label{fig:schema_analysis}
 \end{figure}
 
 
