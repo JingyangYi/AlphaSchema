@@ -5,8 +5,8 @@ Beyond overall performance, we further analyze why \method{} is
 effective as a semantic search framework for alpha mining. Our analyses
 focus on four aspects: (1) whether the proposed schema decomposition
 provides meaningful semantic structure for factor discovery; (2) whether
-the trading-semantic space contains learnable reward information and can
-be effectively navigated during search; (3) how realization budget should
+the resulting semantic space can be effectively navigated during search;
+(3) how realization budget should
 be allocated under stochastic plan-to-factor mapping; and (4) whether the
 framework remains robust across different LLM realization backends.
 \subsection{Semantic Component Ablation}
@@ -41,43 +41,14 @@ model can compensate for missing semantic details, the resulting factors
 are less effective when important aspects of the trading mechanism are
 omitted.
 
-\subsection{Learnability and Navigation of the Semantic Space}
-
-We next investigate whether the trading-semantic space contains
-learnable reward structures and how \method{} navigates this space.
-
-\paragraph{Reward Predictability.}
-We collect over 8,000 schema plans with realized rewards from historical
-search runs. Each plan is encoded by one-hot semantic components and
-structural features (e.g., component counts and interactions). We split
-the collected plans into training and held-out sets and train a LightGBM
-surrogate to predict realized rewards from semantic representations. On
-the held-out set, the surrogate achieves a Spearman correlation of 0.237
-and a 1.51$\times$ top-decile reward lift, while shuffled rewards provide
-no predictive signal. These results indicate that factor quality contains
-learnable information from trading semantics.
-
 \begin{figure}[!t]
     \centering
-    \begin{subfigure}{\columnwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/schema_component_ablation_drop.pdf}
-        \caption{Component-wise schema ablation.}
-        \label{fig:schema_leave_one_out}
-    \end{subfigure}
-    \vspace{2pt}
-    \begin{subfigure}{\columnwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/compact_learnability_spearman.pdf}
-        \caption{Schema-space reward predictability.}
-        \label{fig:schema_predictability}
-    \end{subfigure}
-    \caption{Analysis of semantic structure and learnability.}
-    \label{fig:schema_analysis}
+    \includegraphics[width=\columnwidth]{figures/schema_component_ablation_drop.pdf}
+    \caption{Component-wise schema ablation.}
+    \label{fig:schema_leave_one_out}
 \end{figure}
 
-
-\paragraph{Semantic Navigation During Search.}
+\subsection{Semantic Navigation During Search}
 To examine how \method{} navigates the semantic space, we trace all
 schema plans generated during a complete search run. Each plan is
 embedded from its semantic description and reduced to a 50-dimensional

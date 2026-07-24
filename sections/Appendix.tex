@@ -286,6 +286,7 @@ GLM-5.2 & 75/100 & 22 & 97/100 & 0.0145 & 0.0109 \\
 The corresponding visualization is reported in Figure~\ref{fig:code_agent_model_invariance} in the main paper. The results separate execution reliability from factor quality. Retry mainly improves completion rates for lower Pass@1 backends, while successful factors from different backends remain in a comparable signal range. This supports the view that the schema provides transferable implementation intent rather than relying on a single agent backend.
 
 \subsection{Predictability of Schema Space}
+\label{sec:appendix_schema_predictability}
 
 The predictability experiment evaluates whether reward can be inferred from the discrete schema representation alone. The dataset contains 12,126 valid plan--reward pairs and 11,295 unique schema keys. We use an 80/20 split, resulting in 2,430 held-out test examples. The target reward follows the historical factor-mining reward used in the search logs:
 \begin{equation}
@@ -319,4 +320,14 @@ Shuffled reward & LGBM & 0.029 & 0.021 & 0.0917 & 0.946 \\
 
 The shuffled-reward control remains near random, supporting that the observed predictability reflects a genuine schema--reward relationship rather than feature dimensionality alone.
 
-The corresponding visualization is reported in Figure~\ref{fig:schema_predictability} in the main paper. It shows the same control logic: schema features yield nontrivial ranking and top-decile enrichment, pair interactions add a small gain, and shuffled rewards collapse toward random selection.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/compact_learnability_spearman.pdf}
+    \caption{Reward predictability from structured schema features.}
+    \label{fig:schema_predictability}
+\end{figure}
+
+Figure~\ref{fig:schema_predictability} visualizes the same control logic:
+schema features yield nontrivial ranking and top-decile enrichment, pair
+interactions add a small gain, and shuffled rewards collapse toward random
+selection.
