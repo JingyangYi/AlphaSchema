@@ -30,17 +30,18 @@ Open-source factor libraries include Alpha158 and Alpha360
 AlphaPROBE \cite{guo2026alphaprobe}. Predictor baselines use the same
 train/validation/test split.
 
-\paragraph{AlphaSchema Configuration.}
-\method{} uses DeepSeek-V4-Flash as the default code-agent backend,
-chosen for its low inference cost. Each run uses a batch size of 12
-plans for 80 rounds. The first 10 rounds form a cold-start phase using
-exploration only, after which the adaptive quota schedule gradually
-increases reward-based selection and mutation. We conduct five
-independent runs and construct the reported factor pools from their
-validated outputs using reward ranking and correlation filtering.
-The primary setting uses OHLCV and VWAP inputs, while an additional
-\textsc{+Fundamental} pool includes factors generated from fundamental
-schema fields.
+\paragraph{Configuration.}
+\method{} searches over a price-volume semantic space consisting of 140
+components, including 40 Events, 40 Contexts, 51 Qualities, 3 Directions,
+and 7 Outputs. These components describe trading semantics derived from
+OHLCV and VWAP information, while additional fundamental schemas are
+introduced separately in the \textsc{+Fundamental} setting. DeepSeek-V4-Flash
+is used as the default code-agent backend due to its low inference cost.
+Each run evaluates 12 plans per round for 80 rounds, with the first 10
+rounds using exploration only and later rounds gradually introducing
+surrogate-guided selection and mutation. We conduct five independent runs
+and construct final factor pools from validated outputs using reward
+ranking and correlation filtering.
 
 \subsection{Main Results}
 
