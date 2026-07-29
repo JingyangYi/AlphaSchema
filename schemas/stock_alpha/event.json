@@ -1,0 +1,669 @@
+{
+  "version": "stock_alpha_extended_v1",
+  "category": "event",
+  "description": "Fully inherits stock_alpha_v1 and adds targeted extensions around historically high-reward VWAP interactions, volume-price input-output efficiency, high-range close acceptance, and prior-close anchor logic.",
+  "schemas": [
+    {
+      "schema_id": "event.gap_fill_or_hold",
+      "category": "event",
+      "family": "gap",
+      "name": "Gap Fill or Hold",
+      "description": "After a significant price gap occurs, subsequent price either returns to the pre-gap reference area or holds at the gap edge and remains on the gap-direction side. This event describes the post-gap price-state choice.",
+      "terms": {
+        "Gap": "The current open shows a clear discontinuity relative to the previous reference price.",
+        "Gap edge": "The boundary of the price discontinuity before and after the gap; common references include the previous close, previous high, or previous low."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.range_shock_directional_move",
+      "category": "event",
+      "family": "range_shock",
+      "name": "Range Shock Directional Move",
+      "description": "True range or body range expands abnormally relative to recent levels, and price shows a clear directional move during or after the shock. This event describes the simultaneous occurrence of range shock and directional movement.",
+      "terms": {
+        "True range": "true range, typically measured as the maximum of high-low, |high-prev_close|, and |low-prev_close|.",
+        "Body range": "The candlestick body size, typically measured by |close-open|.",
+        "Directional move": "Price shows a clear upward or downward move during or after the shock."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.volume_expansion_directional_move",
+      "category": "event",
+      "family": "volume",
+      "name": "Volume Expansion Directional Move",
+      "description": "Volume expands significantly relative to recent levels while price makes a clear directional move. This event describes the simultaneous occurrence of expanded trading participation and directional price movement.",
+      "terms": {
+        "Volume": "volume, representing the scale of trading participation in the bar or observation window.",
+        "Volume expansion": "Volume increases significantly relative to its own recent level.",
+        "Directional move": "Price shows a clear upward or downward move during the same phase."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.volume_expansion_failure",
+      "category": "event",
+      "family": "volume",
+      "name": "Volume Expansion Failure",
+      "description": "Volume expands significantly, but price fails to sustain the directional move formed during the volume expansion, showing interrupted or retraced follow-through under high participation. This event describes the failure of a volume-driven push to persist.",
+      "terms": {
+        "Volume": "volume, representing the scale of trading participation in the bar or observation window.",
+        "Volume expansion": "Volume increases significantly relative to its own recent level.",
+        "Interrupted follow-through": "Price fails to sustain the directional move formed during the volume expansion."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.close_confirmed_breakout",
+      "category": "event",
+      "family": "breakout",
+      "name": "Close-Confirmed Breakout",
+      "description": "At the close, price moves beyond a reference level or boundary, and the closing price is outside that boundary. This event describes the fact of a closing breakout.",
+      "terms": {
+        "At the close": "Uses the position of close relative to the reference level or boundary as the observation target.",
+        "Reference level or boundary": "Price levels, range boundaries, channel boundaries, or structural levels provided by subsequent context."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.failed_breakout_reclaim",
+      "category": "event",
+      "family": "breakout",
+      "name": "Failed Breakout Reclaim",
+      "description": "After briefly moving beyond a reference level or boundary, price returns back inside the boundary. This event describes the complete pattern formed by the breach and reclaim.",
+      "terms": {
+        "Breach": "Price temporarily trades outside the reference level or boundary.",
+        "Reclaim": "Price returns back inside the reference level or boundary.",
+        "Reference level or boundary": "Price levels, range boundaries, channel boundaries, or structural levels provided by subsequent context."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.liquidity_sweep_reclaim",
+      "category": "event",
+      "family": "breakout",
+      "name": "Liquidity Sweep Reclaim",
+      "description": "After a wick or brief price move sweeps a recent reference high or low, the close returns back inside that level. This event describes the price pattern of the sweep and reclaim.",
+      "terms": {
+        "Sweep": "A wick or brief price move moves beyond a recent reference high or low.",
+        "Reclaim": "Price returns back inside the swept level.",
+        "Reference highs and lows": "Recent highs, lows, or structural levels provided by subsequent context."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.retest_hold",
+      "category": "event",
+      "family": "retest",
+      "name": "Retest Hold",
+      "description": "After moving away from a reference level, price returns near it but does not break back inside the original-direction side, instead holding near the reference or moving away again. This event describes the price behavior of retest and hold.",
+      "terms": {
+        "Retest": "After moving away from the reference level, price returns near it again.",
+        "Hold": "After approaching the reference level, price does not break back inside the original-direction side.",
+        "Reference level": "Boundary, equilibrium level, channel, or structural level provided by subsequent context."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.effort_result_breakout",
+      "category": "event",
+      "family": "effort_result",
+      "name": "Effort-Result Breakout",
+      "description": "When input variables such as trading activity, volatility, or positioning change, the price result also shows a more pronounced directional move, indicating a change in the efficiency relationship between input and price outcome. This event describes a change in the input-output relationship.",
+      "terms": {
+        "Input variables": "Variables representing market participation or volatility input, such as volume, true range, body range, and position change.",
+        "Price result": "The directional move, net displacement, or follow-through magnitude produced by price during the same phase.",
+        "Efficiency relationship": "The relative relationship between input variables and the price result."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.range_efficiency_expansion",
+      "category": "event",
+      "family": "efficiency",
+      "name": "Range Efficiency Expansion",
+      "description": "Price net displacement increases significantly relative to path length or range width, indicating a shift from back-and-forth movement to more direct directional movement. This event describes a change in path efficiency.",
+      "terms": {
+        "Net displacement": "The price change from the start to the end of the observation window.",
+        "Path length": "The cumulative magnitude of segment-by-segment price changes within the observation window.",
+        "Range width": "The span formed by the highest and lowest prices within the observation window."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.compression_release_breakout",
+      "category": "event",
+      "family": "compression",
+      "name": "Compression Release Breakout",
+      "description": "After price or volatility stays compressed for a period, a directional release occurs and moves beyond the compression range. This event describes the release and breakout following compression.",
+      "terms": {
+        "Compression state": "Price volatility, range width, or body size narrows relative to recent levels.",
+        "Release": "After compression, price volatility or directional movement expands again.",
+        "Compression range": "The price range or volatility boundary formed during the compression phase."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.volatility_regime_expansion",
+      "category": "event",
+      "family": "volatility",
+      "name": "Volatility Regime Expansion",
+      "description": "The level of price volatility rises significantly relative to the recent state, indicating a transition from lower-volatility or contraction conditions into a higher-volatility state. This event describes a change in volatility state.",
+      "terms": {
+        "Volatility level": "The recent state of price-change magnitude, true range, body range, or return volatility.",
+        "Volatility regime expansion": "The volatility level rises significantly relative to its own recent state."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.price_oscillator_divergence",
+      "category": "event",
+      "family": "oscillator",
+      "name": "Price-Oscillator Divergence",
+      "description": "Price changes and oscillator or momentum-indicator changes are out of sync, such that when price approaches or exceeds a recent extreme, the oscillator fails to form a same-direction extreme or confirmation. This event describes the fact of divergence between price and oscillator.",
+      "terms": {
+        "Oscillator": "A momentum or overbought-oversold indicator constructed from the price series, such as ROC, RSI, KDJ, or similar indicators.",
+        "Divergence": "Price changes and oscillator changes fail to produce synchronized confirmation.",
+        "Recent extreme": "A recent high or low provided by subsequent context or by the oscillator's own window."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.oscillator_repair_cross",
+      "category": "event",
+      "family": "oscillator",
+      "name": "Oscillator Repair Cross",
+      "description": "The oscillator moves from an extreme region toward a neutral region and crosses the midline, signal line, or repair threshold. This event describes oscillator-state repair and crossing.",
+      "terms": {
+        "Oscillator": "A momentum or overbought-oversold indicator constructed from the price series, such as ROC, RSI, KDJ, or similar indicators.",
+        "Extreme region": "The oscillator's own overheated, overcooled, or non-neutral region.",
+        "Midline or signal line": "The oscillator's own neutral level, moving average, or trigger line."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.vwap_slope_turn",
+      "category": "event",
+      "family": "vwap",
+      "name": "VWAP Slope Turn",
+      "description": "The slope of VWAP or volume-weighted equilibrium price changes direction, showing a switch in the upward, downward, or neutral state of the equilibrium price. This event describes a change in VWAP slope.",
+      "terms": {
+        "VWAP": "Volume-weighted average price; if no direct field is available, a reasonable approximation may be chosen in the downstream implementation.",
+        "Slope": "The direction and speed of change in VWAP or volume-weighted equilibrium price over time.",
+        "Neutral state": "A state where the slope is near zero or direction is unclear."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.vwap_reclaim_or_reject",
+      "category": "event",
+      "family": "vwap",
+      "name": "VWAP Reclaim or Rejection",
+      "description": "Price returns to the vicinity of VWAP or crosses VWAP again, or alternatively touches VWAP and fails to cross before moving away. This event describes price contact with VWAP, reclaim, or rejection.",
+      "terms": {
+        "VWAP": "Volume-weighted average price; if no direct field is available, a reasonable approximation may be chosen in the downstream implementation.",
+        "Reclaim": "Price returns to or crosses VWAP again from one side.",
+        "Rejection": "After approaching VWAP, price fails to cross and moves away."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.close_position_extreme",
+      "category": "event",
+      "family": "close_position",
+      "name": "Extreme Close Position",
+      "description": "The closing price lies in an extreme region on one side of a single-bar range, rolling range, or reference level. This event describes the close position itself.",
+      "terms": {
+        "Close position": "The relative position of close within a single-bar range, rolling range, or reference range.",
+        "Extreme region": "A region where the relative position is near the top or bottom of the range."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.body_range_expansion_close",
+      "category": "event",
+      "family": "bar_shape",
+      "name": "Body Expansion Close Follow-Through",
+      "description": "The candlestick body expands significantly relative to recent levels, and the closing price is near the side corresponding to the body direction. This event describes body expansion and close position.",
+      "terms": {
+        "Candlestick body": "|close-open|.",
+        "Body expansion": "The candlestick body increases significantly relative to its own recent level.",
+        "Close position": "The position of close relative to open, high, low, or the body direction."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.trend_acceleration_burst",
+      "category": "event",
+      "family": "trend",
+      "name": "Trend Acceleration Burst",
+      "description": "The speed, slope, or consecutive follow-through magnitude of price change strengthens significantly relative to the recent state, indicating that an existing directional move has entered a faster phase. This event describes a sharp increase in trend efficiency or speed.",
+      "terms": {
+        "Acceleration": "The speed of price change, slope, ROC, or consecutive net follow-through rises significantly relative to the recent state.",
+        "Burst": "A sudden strengthening in follow-through magnitude, directional efficiency, or trend strength over a short period."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.volatility_regime_shift",
+      "category": "event",
+      "family": "volatility_transition",
+      "name": "Volatility Regime Shift",
+      "description": "The volatility scale undergoes a clear tier change relative to the past state, such as shifting from low volatility to high volatility or from high volatility to low volatility. This event describes a change in the volatility-state tier.",
+      "terms": {
+        "regime": "The market volatility state described by rolling volatility level, quantile, mean, or state label.",
+        "Tier change": "The current state crosses a clear threshold or quantile range relative to the past state."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "event.cross_section_range_shock_directional_move_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "range_shock",
+      "name": "Cross-Sectional Range Shock Follow-Through Rank",
+      "description": "While preserving the semantics of range shock directional move, compares the strength across instruments of true-range or body-range abnormal expansion relative to their own history accompanied by directional movement.",
+      "terms": {
+        "Range shock": "True range or body range expands abnormally relative to recent levels.",
+        "Relative shock strength": "The cross-sectional position of each instrument's shock strength."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_volume_expansion_directional_move_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "volume",
+      "name": "Cross-Sectional Volume Expansion Directional Move Rank",
+      "description": "While preserving the semantics of volume expansion directional move, compares the strength across instruments of trading participation expansion relative to their own history accompanied by directional movement.",
+      "terms": {
+        "Volume expansion directional move": "Volume expands relative to recent levels while price makes a clear directional move.",
+        "Cross-sectional volume-expansion strength": "The relative position of volume-driven follow-through within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_volume_expansion_failure_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "volume",
+      "name": "Cross-Sectional Volume Expansion Failure Rank",
+      "description": "While preserving the semantics of volume expansion failure, compares the relative strength across instruments of interrupted or retraced directional follow-through under high participation.",
+      "terms": {
+        "Volume expansion failure": "Volume expands significantly but price fails to sustain the move.",
+        "Failure strength": "The degree to which the volume-driven push is retraced or interrupted."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_close_confirmed_breakout_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "breakout",
+      "name": "Cross-Sectional Close-Confirmed Breakout Rank",
+      "description": "While preserving the semantics of close-confirmed breakout, compares the standardized strength across instruments of the close moving beyond a reference level or boundary.",
+      "terms": {
+        "Close-confirmed breakout": "The closing price lies outside the reference boundary.",
+        "Standardized breakout strength": "The strength of the breach magnitude relative to volatility or the instrument's own historical scale."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_failed_breakout_reclaim_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "breakout",
+      "name": "Cross-Sectional Failed Breakout Reclaim Rank",
+      "description": "While preserving the semantics of failed breakout reclaim, compares the reclaim strength across instruments after a brief breach returns back inside the boundary.",
+      "terms": {
+        "Failed breakout reclaim": "Price briefly breaches the boundary and then returns back inside.",
+        "Reclaim strength": "The relative degree of breakout failure and return inside the boundary."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_effort_result_breakout_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "effort_result",
+      "name": "Cross-Sectional Effort-Result Breakout Rank",
+      "description": "While preserving the semantics of effort-result breakout, compares the efficiency strength across instruments when changes in input variables and price outcomes synchronously produce a breakout.",
+      "terms": {
+        "Effort-result breakout": "When input variables such as trading activity, volatility, or positioning change, the price result also shows a directional move.",
+        "Efficiency strength": "The relative degree of synchronization and amplification between input and price result."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_range_efficiency_expansion_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "efficiency",
+      "name": "Cross-Sectional Range Efficiency Expansion Rank",
+      "description": "While preserving the semantics of range efficiency expansion, compares the relative strength across instruments of improvement in net displacement relative to path length or range width.",
+      "terms": {
+        "Range efficiency expansion": "Price movement shifts from back-and-forth fluctuation to more direct directional movement.",
+        "Cross-sectional efficiency": "The relative position of path-efficiency improvement within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_volatility_regime_expansion_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "volatility",
+      "name": "Cross-Sectional Volatility Regime Expansion Rank",
+      "description": "While preserving the semantics of volatility regime expansion, compares across instruments the magnitude of volatility-level uplift relative to each instrument's own recent state.",
+      "terms": {
+        "Volatility regime expansion": "The market shifts from lower-volatility or contraction conditions into a higher-volatility state.",
+        "Relative expansion magnitude": "The cross-sectional ranking of volatility uplift."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_liquidity_sweep_reclaim_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "breakout",
+      "name": "Cross-Sectional Liquidity Sweep Reclaim Rank",
+      "description": "While preserving the semantics of liquidity sweep reclaim, compares the standardized strength across instruments of closing back inside after sweeping recent reference highs or lows.",
+      "terms": {
+        "Liquidity sweep reclaim": "A wick or brief move sweeps reference highs or lows and then reclaims.",
+        "Cross-sectional reclaim strength": "The relative position within the instrument universe of the sweep-and-reclaim degree."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_retest_hold_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "retest",
+      "name": "Cross-Sectional Retest Hold Rank",
+      "description": "While preserving the semantics of retest hold, compares across instruments the relative clarity of revisiting and holding a reference level after moving away from it.",
+      "terms": {
+        "Retest hold": "Price returns near the reference level but does not break back inside the original-direction side.",
+        "Hold strength": "The standardized relative degree of retest-and-hold behavior."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_compression_release_breakout_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "compression",
+      "name": "Cross-Sectional Compression Release Breakout Rank",
+      "description": "While preserving the semantics of compression release breakout, compares the relative strength across instruments of moving from compression into directional release and beyond the compression range.",
+      "terms": {
+        "Compression release breakout": "After compression in price or volatility, directional release occurs and breaches the range.",
+        "Release strength": "The cross-sectional ranking of release and breakout magnitude."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_price_oscillator_divergence_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "oscillator",
+      "name": "Cross-Sectional Price-Oscillator Divergence Rank",
+      "description": "While preserving the semantics of price-oscillator divergence, compares the divergence strength across instruments when price approaches an extreme but the oscillator fails to confirm synchronously.",
+      "terms": {
+        "Price-oscillator divergence": "Price changes and oscillator or momentum-indicator changes are out of sync.",
+        "Cross-sectional divergence strength": "The relative position of divergence degree at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_oscillator_repair_cross_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "oscillator",
+      "name": "Cross-Sectional Oscillator Repair Cross Rank",
+      "description": "While preserving the semantics of oscillator repair cross, compares the relative strength across instruments of oscillators repairing from extreme regions toward neutral and crossing thresholds.",
+      "terms": {
+        "Oscillator repair cross": "The oscillator moves from an extreme region toward neutral and crosses a threshold.",
+        "Repair strength": "The cross-sectional ranking of repair speed or crossing clarity."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_vwap_slope_turn_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "vwap",
+      "name": "Cross-Sectional VWAP Slope Turn Rank",
+      "description": "While preserving the semantics of VWAP slope turn, compares the relative strength across instruments of directional changes in the slope of VWAP or volume-weighted equilibrium price.",
+      "terms": {
+        "VWAP slope turn": "The slope of the volume-weighted equilibrium price changes direction.",
+        "Cross-sectional turn strength": "The relative position within the instrument universe of slope-change magnitude."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_vwap_reclaim_or_reject_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "vwap",
+      "name": "Cross-Sectional VWAP Reclaim or Rejection Rank",
+      "description": "While preserving the semantics of VWAP reclaim or rejection, compares the standardized strength across instruments of price contact with, crossing of, reclaim of, or rejection at VWAP.",
+      "terms": {
+        "VWAP reclaim or rejection": "Price returns to the vicinity of VWAP or moves away after touching it.",
+        "Cross-sectional interaction strength": "The relative clarity of price interaction with VWAP."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_close_position_extreme_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "close_position",
+      "name": "Cross-Sectional Extreme Close Position Rank",
+      "description": "While preserving the semantics of extreme close position, compares across instruments the degree to which the closing price lies in an extreme region on one side of a single-bar range, rolling range, or reference level.",
+      "terms": {
+        "Extreme close position": "The closing price lies in an extreme region on one side of a range or reference level.",
+        "Cross-sectional extremeness": "The ranking of extreme close-position degree within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_body_range_expansion_close_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "bar_shape",
+      "name": "Cross-Sectional Body Expansion Close Rank",
+      "description": "While preserving the semantics of body expansion close follow-through, compares the strength across instruments of candlestick-body expansion relative to recent levels with the close near the body-direction side.",
+      "terms": {
+        "Body expansion close follow-through": "The candlestick body expands significantly and the close is near the side of the body direction.",
+        "Cross-sectional body strength": "The relative strength in the cross section of body expansion and close position."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_trend_acceleration_burst_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "trend",
+      "name": "Cross-Sectional Trend Acceleration Burst Rank",
+      "description": "While preserving the semantics of trend acceleration burst, compares the relative strength across instruments of short-term increases in price-change speed, slope, or consecutive follow-through magnitude.",
+      "terms": {
+        "Trend acceleration burst": "The speed of price change, slope, or consecutive follow-through magnitude strengthens significantly.",
+        "Cross-sectional acceleration strength": "The relative position of trend acceleration within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "event.vwap_reclaim_acceptance",
+      "category": "event",
+      "scope": "time_series",
+      "family": "vwap",
+      "name": "VWAP Reclaim Acceptance",
+      "description": "Price crosses back above VWAP from below and then remains above VWAP or continues higher within a subsequent limited window. This event combines the instantaneous cross with the post-reclaim acceptance state.",
+      "terms": {
+        "VWAP reclaim": "Price crosses VWAP from below and closes above it.",
+        "Acceptance": "After the reclaim, price remains on the same side of VWAP or continues moving in the reclaim direction within a limited window."
+      }
+    },
+    {
+      "schema_id": "event.vwap_rejection_continuation",
+      "category": "event",
+      "scope": "time_series",
+      "family": "vwap",
+      "name": "VWAP Rejection Continuation",
+      "description": "After approaching or briefly touching VWAP, price fails to cross and continues moving away from VWAP on the original side. This event emphasizes directional continuation after the rejection action.",
+      "terms": {
+        "VWAP rejection": "After approaching or touching VWAP, price fails to cross it effectively.",
+        "Rejection continuation": "After the rejection occurs, price continues moving away from VWAP."
+      }
+    },
+    {
+      "schema_id": "event.vwap_reclaim_failure",
+      "category": "event",
+      "scope": "time_series",
+      "family": "vwap",
+      "name": "VWAP Reclaim Failure",
+      "description": "Price temporarily crosses from one side of VWAP to the other but fails to hold and then falls back or rises back to the original side. This event describes a reclaim action that is quickly negated.",
+      "terms": {
+        "Temporary reclaim": "Price briefly crosses VWAP and sits on the other side.",
+        "Reclaim failure": "After the cross, price fails to hold and returns to the original side."
+      }
+    },
+    {
+      "schema_id": "event.vwap_prior_close_dual_anchor_breakout",
+      "category": "event",
+      "scope": "time_series",
+      "family": "dual_anchor",
+      "name": "VWAP Prior-Close Dual-Anchor Breakout",
+      "description": "During the same phase, price moves beyond the dual anchors formed by VWAP and the prior close, and closes outside both anchors on the same side. This event describes the joint breakout of the equilibrium price and the overnight reference price.",
+      "terms": {
+        "Dual anchor": "Two price references jointly formed by the intraday VWAP and the prior close under a consistent adjusted-price convention.",
+        "Dual-anchor breakout": "Price moves beyond both references and closes outside them on the same side."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_vwap_reclaim_strength_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "vwap",
+      "name": "Cross-Sectional VWAP Reclaim Strength Rank",
+      "description": "Compares across stocks the relative strength of reclaiming from below VWAP, reclaim depth, and the degree of subsequent hold.",
+      "terms": {
+        "Reclaim strength": "Strength jointly expressed by crossing magnitude, close position, and post-reclaim hold quality.",
+        "Cross-sectional rank": "Comparison of reclaim strength across the stock universe on the same trading day."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_vwap_rejection_strength_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "vwap",
+      "name": "Cross-Sectional VWAP Rejection Strength Rank",
+      "description": "Compares across stocks the relative strength of touching VWAP, failing to cross, and moving away on the original side.",
+      "terms": {
+        "Rejection strength": "Strength jointly expressed by touch depth, close-away distance, and subsequent continuation.",
+        "Cross-sectional rank": "Comparison of rejection strength across the stock universe on the same trading day."
+      }
+    },
+    {
+      "schema_id": "event.turnover_effort_result_breakout",
+      "category": "event",
+      "scope": "time_series",
+      "family": "effort_result",
+      "name": "Turnover Effort-Result Breakout",
+      "description": "When turnover_rate changes significantly relative to recent conditions, price net displacement, breakout depth, or closing follow-through also strengthens synchronously. This event specifically describes breakout efficiency between turnover input and price result.",
+      "terms": {
+        "Turnover input": "Trading participation represented by turnover_rate relative to its own recent level.",
+        "Price result": "Effective follow-through such as net displacement, breakout depth, or directional close."
+      }
+    },
+    {
+      "schema_id": "event.amount_effort_result_breakout",
+      "category": "event",
+      "scope": "time_series",
+      "family": "effort_result",
+      "name": "Amount Effort-Result Breakout",
+      "description": "When traded amount changes significantly relative to recent conditions, price net displacement, breakout depth, or closing follow-through also strengthens synchronously. This event specifically describes breakout efficiency between capital-flow trading input and price result.",
+      "terms": {
+        "Amount input": "Capital participation represented by amount, turnover_value, or deal_amount relative to its own recent level.",
+        "Price result": "Effective follow-through such as net displacement, breakout depth, or directional close."
+      }
+    },
+    {
+      "schema_id": "event.high_turnover_low_result_failure",
+      "category": "event",
+      "scope": "time_series",
+      "family": "effort_result",
+      "name": "High Turnover Low-Result Failure",
+      "description": "turnover_rate is elevated, but price net displacement, breakout depth, or directional close is clearly insufficient, indicating that substantial trading input did not convert into effective price follow-through.",
+      "terms": {
+        "High turnover": "turnover_rate is significantly elevated relative to its own recent state.",
+        "Low result": "Price net displacement or effective breakout is weak relative to trading input."
+      }
+    },
+    {
+      "schema_id": "event.low_turnover_high_result_efficiency",
+      "category": "event",
+      "scope": "time_series",
+      "family": "effort_result",
+      "name": "Low Turnover High-Result Efficiency",
+      "description": "Trading input from turnover is relatively limited, but price produces a clear net displacement, breakout, or directional close, indicating high price-follow-through efficiency from relatively small trading input.",
+      "terms": {
+        "Low turnover": "turnover_rate is not significantly above its own recent state.",
+        "High-result efficiency": "Effective price follow-through is high relative to turnover input."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_turnover_efficiency_breakout_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "effort_result",
+      "name": "Cross-Sectional Turnover Efficiency Breakout Rank",
+      "description": "Compares across stocks the strength of price net displacement, breakout depth, or directional close produced per unit of turnover input.",
+      "terms": {
+        "Turnover efficiency": "The relationship between effective price follow-through and turnover_rate input.",
+        "Cross-sectional rank": "Comparison of turnover input-output efficiency across stocks on the same trading day."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_amount_efficiency_breakout_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "effort_result",
+      "name": "Cross-Sectional Amount Efficiency Breakout Rank",
+      "description": "Compares across stocks, after standardization by each stock's own historical scale, the strength of effective price follow-through produced per unit of traded-amount input.",
+      "terms": {
+        "Amount efficiency": "The relationship between effective price follow-through and standardized traded-amount input.",
+        "Cross-sectional rank": "Comparison of traded-amount input-output efficiency across stocks on the same trading day."
+      }
+    },
+    {
+      "schema_id": "event.high_range_close_acceptance",
+      "category": "event",
+      "scope": "time_series",
+      "family": "close_position",
+      "name": "High-Range Close Acceptance",
+      "description": "After entering a high quantile of the recent range, price closes at elevated levels and does not quickly fall back to the middle of the range afterward. This event describes market acceptance of high prices.",
+      "terms": {
+        "High range": "Price is in a high-quantile region of its own recent rolling range.",
+        "High-price acceptance": "Price closes high and holds there within a limited window."
+      }
+    },
+    {
+      "schema_id": "event.high_range_close_rejection",
+      "category": "event",
+      "scope": "time_series",
+      "family": "close_position",
+      "name": "High-Range Close Rejection",
+      "description": "Price touches or enters a high quantile of the recent range, but the close retreats clearly or quickly falls back to a lower level afterward. This event describes the market's non-acceptance of high prices.",
+      "terms": {
+        "High range": "Price touches a high-quantile region of its own recent rolling range.",
+        "High-price rejection": "After reaching high levels, the close retreats or quickly leaves the high area in the short term."
+      }
+    },
+    {
+      "schema_id": "event.gap_prior_close_reclaim",
+      "category": "event",
+      "scope": "time_series",
+      "family": "gap",
+      "name": "Post-Gap Prior-Close Reclaim",
+      "description": "After a stock opens with a gap relative to the prior close, intraday price crosses the prior-close anchor again and closes on the opposite side. This event describes overnight pricing being repriced by intraday trading.",
+      "terms": {
+        "Gap": "open shows a clear deviation relative to pre_close or act_pre_close under the corresponding adjusted-price convention.",
+        "Prior-close reclaim": "Intraday price crosses the prior close again under a consistent price convention and closes on the opposite side."
+      }
+    },
+    {
+      "schema_id": "event.cross_section_prior_close_anchor_strength_rank",
+      "category": "event",
+      "scope": "cross_section",
+      "family": "anchor",
+      "name": "Cross-Sectional Prior-Close Anchor Interaction Strength Rank",
+      "description": "Compares across stocks the strength of deviation from, crossing of, reclaim of, or rejection at the prior close, and forms a relative ranking on the same trading day.",
+      "terms": {
+        "Prior-close anchor interaction": "Deviation from, crossing of, reclaim of, or rejection at pre_close or act_pre_close under a consistent adjusted-price convention.",
+        "Cross-sectional strength": "The relative position within the stock universe after standardization by each stock's own volatility scale."
+      }
+    }
+  ]
+}

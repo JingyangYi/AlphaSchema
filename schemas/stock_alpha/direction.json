@@ -1,0 +1,46 @@
+{
+  "version": "stock_alpha_extended_v1",
+  "category": "direction",
+  "description": "Retains only the original time-series directions. For cross-sectional plans, relative long-short exposure is jointly determined by the cross-sectional scores from event, quality, and output schemas and by continuation, reversal, or range-oscillation guidance.",
+  "schemas": [
+    {
+      "schema_id": "direction.continuation",
+      "category": "direction",
+      "family": "direction_guidance",
+      "name": "Continuation Direction Guidance",
+      "description": "Treats the event as an indication that price may continue in the direction expressed by the event. The final signal should preferably follow that direction.",
+      "terms": {
+        "continuation": "Price continues in the direction expressed by the event after the event occurs.",
+        "event-implied direction": "The direction indicated by a breakout, close location, directional move, deviation, or another observable directional feature in the event.",
+        "alpha construction preference": "A hypothesis that guides the final signal direction, rather than a fixed trading rule."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "direction.reversal",
+      "category": "direction",
+      "family": "direction_guidance",
+      "name": "Reversal Direction Guidance",
+      "description": "Treats the event as an indication that price may correct or retrace against the direction expressed by the event. The final signal should preferably oppose that direction.",
+      "terms": {
+        "reversal": "Price moves against the direction expressed by the event after the event occurs.",
+        "event-implied direction": "The direction indicated by a breakout, close location, directional move, deviation, or another observable directional feature in the event.",
+        "correction or retracement": "Price moves back from the event's direction of travel toward a reference area, an equilibrium area, or the opposite direction."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "direction.range_oscillation",
+      "category": "direction",
+      "family": "direction_guidance",
+      "name": "Range-Oscillation Direction Guidance",
+      "description": "Treats the event as lacking sufficient trend continuation, with price more likely to rotate within the reference space defined by the context. The final alpha direction should be derived from contextual boundaries, zones, equilibrium locations, or the event's local direction.",
+      "terms": {
+        "range oscillation": "Price is more likely to move back and forth within a reference space than to leave it in a sustained direction.",
+        "reference space": "A range, boundary, zone, equilibrium location, or higher-timeframe location supplied by the context.",
+        "direction construction": "Generation of the final alpha sign from a boundary, zone, equilibrium location, or local event direction."
+      },
+      "scope": "time_series"
+    }
+  ]
+}

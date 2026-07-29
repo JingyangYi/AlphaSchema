@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.env
+artifacts/
+data/
+*.joblib
+*.log
+.DS_Store
+

@@ -1,0 +1,108 @@
+{
+  "version": "stock_alpha_extended_v1",
+  "category": "output",
+  "description": "Extends stock_alpha_v1 with output schemas for event memory and cross-sectional stock ranking.",
+  "schemas": [
+    {
+      "schema_id": "output.bounded_continuous_signal",
+      "category": "output",
+      "family": "continuous",
+      "name": "Bounded Continuous Signal",
+      "description": "Compresses a continuous semantic score that already incorporates direction and quality weights into a stable, bounded final signal.",
+      "terms": {
+        "continuous semantic score": "A continuous signed score formed by combining event, context, quality, and direction schemas.",
+        "bounded": "The final signal is constrained to a stable range so that extreme values do not dominate the backtest.",
+        "final signal": "The factor output submitted to the backtest or subsequent evaluation."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "output.event_decay_signal",
+      "category": "output",
+      "family": "event_memory",
+      "name": "Event-Decay Signal",
+      "description": "Retains finite memory after a valid event is triggered and gradually reduces the final signal strength over time.",
+      "terms": {
+        "finite memory": "The event affects the signal only within a finite observation window after it is triggered.",
+        "decay": "Final signal strength decreases as the event ages.",
+        "event age": "Time elapsed since the event was most recently triggered or confirmed."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "output.latest_event_signal",
+      "category": "output",
+      "family": "event_memory",
+      "name": "Latest-Event Signal",
+      "description": "When directional events alternate, retains the direction and quality of the most recent valid event and updates them within the memory window.",
+      "terms": {
+        "latest event": "The most recently triggered valid event after quality processing.",
+        "directional event": "An event whose direction has been determined by a direction schema.",
+        "memory window": "The finite interval over which the final signal retains the latest event's effect."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "output.persistent_condition_signal",
+      "category": "output",
+      "family": "condition_state",
+      "name": "Persistent-Condition Signal",
+      "description": "Maintains the final signal while the directional condition formed by the event, context, quality, and direction schemas remains valid; returns to a missing value or near zero when the condition expires.",
+      "terms": {
+        "directional condition": "An event or state condition that already carries directional meaning.",
+        "persistence": "The condition remains valid across adjacent bars or observation windows.",
+        "condition expiry": "The directional condition is no longer satisfied, or its quality is insufficient to maintain an output."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "output.cross_section_rank_signal",
+      "category": "output",
+      "scope": "cross_section",
+      "family": "cross_section",
+      "name": "Cross-Sectional Rank Signal",
+      "description": "At each timestamp, converts final semantic scores into cross-sectional ranks or percentiles and maps them to bounded signed signals.",
+      "terms": {
+        "rank signal": "A signal obtained by ranking instruments at the same timestamp.",
+        "bounded and signed": "The output is stably constrained to a finite signed range."
+      }
+    },
+    {
+      "schema_id": "output.cross_section_zscore_signal",
+      "category": "output",
+      "scope": "cross_section",
+      "family": "cross_section",
+      "name": "Cross-Sectional Z-Score Signal",
+      "description": "At each timestamp, cross-sectionally demeans, standardizes, and clips final semantic scores to form a relative-strength matrix.",
+      "terms": {
+        "demeaning": "Subtracting the cross-sectional mean at the same timestamp.",
+        "standardization": "Dividing by the cross-sectional standard deviation at the same timestamp and clipping the result."
+      }
+    },
+    {
+      "schema_id": "output.cross_section_smoothed_rank_signal",
+      "category": "output",
+      "scope": "cross_section",
+      "family": "cross_section",
+      "name": "Smoothed Cross-Sectional Rank Signal",
+      "description": "First constructs cross-sectional ranks or z-scores at each timestamp, then applies causal smoothing through time to reduce turnover.",
+      "terms": {
+        "cross-sectional rank": "The ranking of instruments at the same timestamp.",
+        "causal smoothing": "A rolling or exponentially weighted operation that uses only current and past information."
+      }
+    },
+    {
+      "schema_id": "output.cross_section_event_decay_rank_signal",
+      "category": "output",
+      "scope": "cross_section",
+      "family": "event_memory",
+      "name": "Cross-Sectional Event-Decay Rank Signal",
+      "description": "First applies age-based causal decay to event signals within a finite window, then ranks them cross-sectionally on each trading day and maps the ranks to bounded signed signals.",
+      "terms": {
+        "event decay": "The event's influence decreases as it ages after being triggered.",
+        "cross-sectional rank": "The ranking of decayed stock signals on the same trading day.",
+        "bounded output": "Mapping ranking results to a stable, finite range."
+      }
+    }
+  ]
+}

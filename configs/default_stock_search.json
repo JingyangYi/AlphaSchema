@@ -1,0 +1,96 @@
+{
+  "run_name": "default_stock_search",
+  "batch_size": 16,
+  "candidate_pool_size": 10000,
+  "seed": 2026062301,
+  "schema_dir": "../schemas/stock_alpha",
+  "artifact_dir": "../artifacts/default_stock_search",
+  "periods": [20, 80],
+  "max_repairs": 1,
+  "data": {
+    "format": "parquet",
+    "path": "../data/stock_bars",
+    "layout": "one_file_per_symbol",
+    "date_column": "date",
+    "symbol_column": "symbol",
+    "start_date": null,
+    "end_date": null,
+    "columns": {
+      "open": "open",
+      "high": "high",
+      "low": "low",
+      "close": "close",
+      "volume": "volume",
+      "amount": "amount",
+      "vwap": "vwap"
+    }
+  },
+  "evaluation": {
+    "forward_horizon": 5,
+    "min_assets": 20,
+    "reward": {
+      "alpha": 10.0,
+      "beta": 1.0,
+      "lag1_penalty": 2.0
+    }
+  },
+  "code_agent": {
+    "model": null,
+    "base_url": null,
+    "api_key_env": "LLM_API_KEY"
+  },
+  "selector": {
+    "model_objective": "regressor",
+    "ensemble_size": 8,
+    "bootstrap_fraction": 0.7,
+    "quality_count_weights": {
+      "0": 0.15,
+      "1": 0.35,
+      "2": 0.35,
+      "3": 0.15
+    },
+    "schedule": [
+      {
+        "name": "coverage_cold_start",
+        "min_observations": 0,
+        "max_observations": 150,
+        "explore": 16,
+        "exploit": 0,
+        "mutate": 0
+      },
+      {
+        "name": "warm_reward",
+        "min_observations": 150,
+        "max_observations": 300,
+        "explore": 8,
+        "exploit": 6,
+        "mutate": 2
+      },
+      {
+        "name": "normal_reward",
+        "min_observations": 300,
+        "max_observations": 700,
+        "explore": 5,
+        "exploit": 8,
+        "mutate": 3
+      },
+      {
+        "name": "exploit_majority",
+        "min_observations": 700,
+        "max_observations": null,
+        "explore": 3,
+        "exploit": 8,
+        "mutate": 5
+      }
+    ],
+    "mutation_weights": {
+      "replace_quality": 0.22,
+      "replace_context": 0.16,
+      "replace_output": 0.16,
+      "add_quality": 0.14,
+      "drop_quality": 0.12,
+      "replace_direction": 0.12,
+      "replace_event": 0.08
+    }
+  }
+}

@@ -1,0 +1,774 @@
+{
+  "version": "stock_alpha_extended_v1",
+  "category": "quality",
+  "description": "Fully inherits stock_alpha_v1 and adds quality constraints related to turnover, traded amount, VWAP, prior close, and high-range acceptance.",
+  "schemas": [
+    {
+      "schema_id": "quality.volume_confirmation",
+      "category": "quality",
+      "quality_type": "confirmation",
+      "family": "participation",
+      "name": "Volume Confirmation",
+      "description": "Uses changes in trading participation as confirmation of whether the event has external participation support.",
+      "terms": {
+        "Trading Participation": "The scale of market participation represented by volume, traded amount, or similar variables.",
+        "Confirmation": "A supportive relationship where an external variable aligns with the market behavior expressed by the event."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.volume_nonconfirmation",
+      "category": "quality",
+      "quality_type": "nonconfirmation",
+      "family": "participation",
+      "name": "Volume Non-Confirmation",
+      "description": "Uses insufficient trading participation or unsynchronized trading changes as quality evidence that the event lacks external participation support.",
+      "terms": {
+        "Trading Participation": "The scale of market participation represented by volume, traded amount, or similar variables.",
+        "Non-Confirmation": "The external variable does not provide synchronized support for the market behavior expressed by the event."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.volatility_confirmation",
+      "category": "quality",
+      "quality_type": "confirmation",
+      "family": "volatility",
+      "name": "Volatility Confirmation",
+      "description": "Uses changes in volatility magnitude or true range as confirmation of whether the event is accompanied by volatility release.",
+      "terms": {
+        "Volatility Magnitude": "The state of price-change magnitude, true range, real body range, or return volatility.",
+        "True Range": "true range, typically characterized by the maximum of high-low, |high-prev_close|, and |low-prev_close|."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.low_volatility_setup",
+      "category": "quality",
+      "quality_type": "filter",
+      "family": "volatility",
+      "name": "Low-Volatility Setup Filter",
+      "description": "Requires the event to occur after a low-volatility or contraction backdrop, used to filter for clearer release or regime-switch events.",
+      "terms": {
+        "Low Volatility": "The level of price volatility is relatively low versus its own recent state.",
+        "Contraction Backdrop": "The price range, true range, or real body range has narrowed relative to its recent state."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.range_expansion_confirmation",
+      "category": "quality",
+      "quality_type": "confirmation",
+      "family": "volatility",
+      "name": "Range Expansion Confirmation",
+      "description": "Uses expansion of the price operating range as confirmation of whether the event is accompanied by an expansion in activity range.",
+      "terms": {
+        "Operating Range": "The price range formed by the highest and lowest prices within the observation window.",
+        "Expansion": "The operating range expands relative to its own recent state."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.break_depth_sufficiency",
+      "category": "quality",
+      "quality_type": "strength",
+      "family": "depth",
+      "name": "Sufficient Break Depth",
+      "description": "Weights the quality of an event's boundary-crossing behavior based on how far price moves beyond a reference level or boundary.",
+      "terms": {
+        "Break Depth": "The distance after price moves beyond a reference level or boundary.",
+        "Reference Level or Boundary": "A price reference specified by the event or context."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.reclaim_depth_sufficiency",
+      "category": "quality",
+      "quality_type": "strength",
+      "family": "depth",
+      "name": "Sufficient Reclaim Depth",
+      "description": "Weights the quality of reclaim-type events based on how far price moves back inside a reference level or boundary.",
+      "terms": {
+        "Reclaim Depth": "The distance after price moves back inside a reference level or boundary.",
+        "Reclaim": "Price moves back inside the level or boundary that had previously been crossed."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.anchor_distance_scaled",
+      "category": "quality",
+      "quality_type": "weighting",
+      "family": "depth",
+      "name": "Anchor Distance Scaling",
+      "description": "Applies continuous weighting to an event based on the distance between the event and the context reference level.",
+      "terms": {
+        "Anchor": "A price reference level provided by the context.",
+        "Distance Scaling": "A continuous quality weight based on how close price is to the anchor."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.close_strength",
+      "category": "quality",
+      "quality_type": "strength",
+      "family": "bar_shape",
+      "name": "Close Strength",
+      "description": "Weights the quality of an event's closing behavior based on the relative position of the close within the current bar or observation window.",
+      "terms": {
+        "Close Position": "The position of close relative to the high-low range or the observation-window range.",
+        "Close Strength": "The extent to which the close is near one side extreme of the range."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.body_strength",
+      "category": "quality",
+      "quality_type": "strength",
+      "family": "bar_shape",
+      "name": "Body Strength",
+      "description": "Weights the quality of an event's real-body behavior based on the size of the candlestick body relative to its own recent state or the current bar range.",
+      "terms": {
+        "Candlestick Body": "Typically characterized by |close-open|.",
+        "Body Strength": "The size of the candlestick body relative to its own recent state or the current bar range."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.wick_noise_filter",
+      "category": "quality",
+      "quality_type": "cleanliness",
+      "family": "noise",
+      "name": "Wick Noise Filter",
+      "description": "Filters or downweights events that are easily affected by single-bar noise based on wick proportion or wick disturbance.",
+      "terms": {
+        "Wick": "The part of the high-low range not covered by the open-close body.",
+        "Noise Filter": "Reduces the weight of events with unclear patterns or larger disturbance."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.path_cleanliness",
+      "category": "quality",
+      "quality_type": "cleanliness",
+      "family": "noise",
+      "name": "Path Cleanliness",
+      "description": "Weights event cleanliness based on whether the price path is direct and has limited back-and-forth movement.",
+      "terms": {
+        "Price Path": "The trajectory of gradual price movement within the observation window.",
+        "Cleanliness": "The degree to which the path has less back-and-forth movement and noise disturbance."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.chop_filter",
+      "category": "quality",
+      "quality_type": "filter",
+      "family": "noise",
+      "name": "Chop Filter",
+      "description": "Reduces the weight of events occurring in paths with frequent back-and-forth fluctuations and unclear direction.",
+      "terms": {
+        "Chop": "Price frequently changes short-term direction within the observation window.",
+        "Unclear Direction": "Price lacks stable local progression or clear positional change."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.efficiency_filter",
+      "category": "quality",
+      "quality_type": "filter",
+      "family": "noise",
+      "name": "Path Efficiency Filter",
+      "description": "Retains or weights events with higher path efficiency based on the relationship between net displacement and path length.",
+      "terms": {
+        "Net Displacement": "The change from the starting price to the ending price within the observation window.",
+        "Path Length": "The cumulative magnitude of segment-by-segment price changes within the observation window.",
+        "Path Efficiency": "The ratio or relationship of net displacement relative to path length."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.freshness_decay",
+      "category": "quality",
+      "quality_type": "weighting",
+      "family": "timing",
+      "name": "Freshness Decay",
+      "description": "Applies decay weighting to event validity based on the time since the most recent occurrence or confirmation.",
+      "terms": {
+        "Freshness": "The closeness of the event to the most recent occurrence or confirmation time.",
+        "Decay": "Reducing quality weight as time passes."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.first_touch_preference",
+      "category": "quality",
+      "quality_type": "filter",
+      "family": "timing",
+      "name": "First-Touch Preference",
+      "description": "Prefers events that occur on the first touch of a reference level or condition slice, reducing the weight of repeated touches.",
+      "terms": {
+        "First Touch": "The first time price approaches or touches a reference level and forms an event.",
+        "Repeated Touch": "Price approaches or touches the same reference level multiple times."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.event_cooldown",
+      "category": "quality",
+      "quality_type": "filter",
+      "family": "timing",
+      "name": "Event Cooldown Filter",
+      "description": "Downweights or filters frequent consecutive occurrences of the same type of event to reduce repeated-event stacking.",
+      "terms": {
+        "Event Cooldown": "Maintaining some interval between same-type events or reducing the weight of consecutive repeats.",
+        "Repeated-Event Stacking": "Multiple similar events occurring within a short period."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.condition_persistence",
+      "category": "quality",
+      "quality_type": "persistence",
+      "family": "duration",
+      "name": "Condition Persistence",
+      "description": "Weights event quality based on whether the event or event-context condition persists.",
+      "terms": {
+        "Persistence": "The degree to which an event condition remains present across adjacent bars or within the observation window.",
+        "Condition": "A boolean or continuous state formed by the event, context, or a combination of both."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.short_lived_pulse",
+      "category": "quality",
+      "quality_type": "persistence",
+      "family": "duration",
+      "name": "Short-Lived Pulse Preference",
+      "description": "Prefers events that appear suddenly within a short time and do not persist for long, used to filter pulse-type events.",
+      "terms": {
+        "Short-Lived Pulse": "An event that appears suddenly and disappears quickly within a short time.",
+        "Persistence": "The event condition remains present for a long time."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.self_normalized_magnitude",
+      "category": "quality",
+      "quality_type": "normalization",
+      "family": "normalization",
+      "name": "Self-Normalized Magnitude",
+      "description": "Uses a variable's magnitude relative to its own historical state to reduce exposure to absolute price, absolute trading activity, or instrument scale.",
+      "terms": {
+        "Self-Normalization": "Scaling a variable relative to its own historical distribution, mean, volatility, or quantile.",
+        "Scale Exposure": "Non-alpha differences caused by differences in instrument price, volume, or contract characteristics."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.atr_normalized_distance",
+      "category": "quality",
+      "quality_type": "normalization",
+      "family": "normalization",
+      "name": "ATR-Normalized Distance",
+      "description": "Uses volatility units to normalize price distance, break depth, or reclaim depth, reducing price-scale differences across instruments.",
+      "terms": {
+        "ATR": "Average true range, used to describe the normal scale of price fluctuation.",
+        "Normalized Distance": "Relative price distance after dividing by volatility scale."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.rank_normalized_strength",
+      "category": "quality",
+      "quality_type": "normalization",
+      "family": "normalization",
+      "name": "Quantile-Normalized Strength",
+      "description": "Uses time-series quantiles or cross-sectional quantiles to characterize event strength, reducing the impact of outliers and scale differences.",
+      "terms": {
+        "Quantile": "The relative ranking position of a variable within historical samples or cross-sectional samples.",
+        "Strength": "The size of event magnitude, depth, distance, trading activity, volatility, or other continuously measurable quantities."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.higher_timeframe_confirmation",
+      "category": "quality",
+      "quality_type": "confirmation",
+      "family": "cross_scale",
+      "name": "Higher-Timeframe Confirmation",
+      "description": "Uses position, state, or similar events on a higher time scale as external confirmation for the current event.",
+      "terms": {
+        "Higher Timeframe": "A longer time scale relative to the current bar.",
+        "External Confirmation": "Supportive information from a different scale or variable."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.cross_bar_consistency",
+      "category": "quality",
+      "quality_type": "confirmation",
+      "family": "cross_scale",
+      "name": "Cross-Bar Consistency",
+      "description": "Uses similar events or similar states across multiple bar granularities to confirm the consistency of the current event.",
+      "terms": {
+        "Multiple Bar Granularities": "For example 1m, 5m, 10m, 30m, or other time granularities.",
+        "Consistency": "Events or states observed at different granularities have similar meaning."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.missing_data_robustness",
+      "category": "quality",
+      "quality_type": "robustness",
+      "family": "robustness",
+      "name": "Missing-Data Robustness",
+      "description": "Requires event logic to remain robust under missing values, suspension-style gaps, or differences in listing history across instruments.",
+      "terms": {
+        "Missing Values": "Observations that do not exist or are unavailable in the data.",
+        "Robust Handling": "Avoiding abnormal signals, infinite values, or widespread false triggers caused by missing values."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.outlier_clipping",
+      "category": "quality",
+      "quality_type": "robustness",
+      "family": "robustness",
+      "name": "Outlier Clipping",
+      "description": "Applies mild suppression to extreme inputs, extreme intermediate variables, or extreme outputs to reduce signal domination by single-point anomalies.",
+      "terms": {
+        "Outliers": "Observations that deviate significantly relative to their own history or a reasonable range.",
+        "Mild Suppression": "Reducing the impact of extreme values through truncation, compression, or smoothing."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.level_acceptance",
+      "category": "quality",
+      "quality_type": "structure_interaction",
+      "family": "structure_interaction",
+      "name": "Level Acceptance Quality",
+      "description": "Evaluates whether an event is accepted by a reference level based on the extent to which price stays near, closes near, or repeatedly confirms that level.",
+      "terms": {
+        "Level Acceptance": "A state where price stays near or closes near a reference level, making it an effective trading area.",
+        "Reference Level": "A price anchor, boundary, or equilibrium area specified by the context or event."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.level_rejection",
+      "category": "quality",
+      "quality_type": "structure_interaction",
+      "family": "structure_interaction",
+      "name": "Level Rejection Quality",
+      "description": "Evaluates whether an event is rejected by a reference level based on how quickly price leaves it after touching it or fails to stay there.",
+      "terms": {
+        "Level Rejection": "After touching a reference level, price fails to stay and moves away again.",
+        "Quick Departure": "Price moves away from the reference level within a short observation window."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.volume_concentration",
+      "category": "quality",
+      "quality_type": "participation_structure",
+      "family": "participation_structure",
+      "name": "Volume Concentration Quality",
+      "description": "Weights event quality based on whether trading participation is concentrated in the event area or key phase.",
+      "terms": {
+        "Volume Concentration": "Trading participation is relatively concentrated in a specific price area or time phase.",
+        "Key Phase": "The phase when the event occurs, breaks, reclaims, touches, or gets confirmed."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.pre_event_compression",
+      "category": "quality",
+      "quality_type": "compression_expansion",
+      "family": "compression_expansion",
+      "name": "Pre-Event Compression",
+      "description": "Modulates the quality of an event's preparatory structure based on whether the price range, volatility, or body magnitude narrows before the event occurs.",
+      "terms": {
+        "Pre-Event Compression": "Before the event occurs, the price range, volatility, or body magnitude narrows relative to its recent state.",
+        "Preparatory Structure": "The market background state formed before the event occurs."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.post_event_expansion",
+      "category": "quality",
+      "quality_type": "compression_expansion",
+      "family": "compression_expansion",
+      "name": "Post-Event Expansion",
+      "description": "Modulates event quality based on whether the price range, volatility, or body magnitude expands after the event occurs.",
+      "terms": {
+        "Post-Event Expansion": "After the event occurs, the price range, volatility, or body magnitude expands relative to the prior state.",
+        "Follow-Through Behavior": "Market behavior within an observation window after the event occurs."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.range_efficiency",
+      "category": "quality",
+      "quality_type": "filter",
+      "family": "volatility_shape",
+      "name": "Range Efficiency",
+      "description": "Measures whether volatility produces effective progression using the ratio of net price change to range width.",
+      "terms": {
+        "Range Efficiency": "The ratio of abs(close-open) or abs(close-prev_close) relative to high-low or true range."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "quality.cross_section_rank_normalized_strength",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "normalization",
+      "family": "normalization",
+      "name": "Cross-Sectional Quantile-Normalized Strength",
+      "description": "Based on the original quantile-normalized-strength semantics, applies cross-sectional rank or percentile to the event or intermediate strength at each timestamp to reduce instrument scale differences.",
+      "terms": {
+        "Quantile-Normalized Strength": "Using quantiles to characterize event strength.",
+        "Cross-Sectional rank": "Ranking instrument scores at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_neutrality_hint",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "normalization",
+      "family": "normalization",
+      "name": "Cross-Sectional Neutrality Hint",
+      "description": "Retains the original cross-sectional neutrality-hint semantics, requiring implementation to reduce cross-sectional exposure caused by stable differences in instrument scale, price level, or trading activity scale.",
+      "terms": {
+        "Cross-Sectional Neutrality": "Reducing exposure caused by stable differences in instrument scale.",
+        "Cross-Sectional Exposure": "The signal is mainly explained by price, trading activity, or position size."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_volume_confirmation_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "confirmation",
+      "family": "participation",
+      "name": "Cross-Sectional Volume Confirmation Ranking",
+      "description": "Based on the original volume-confirmation semantics, compares the strength of trading-participation changes supporting the event across instruments, and ranks or weights them at the same timestamp.",
+      "terms": {
+        "Volume Confirmation": "Changes in trading participation support the event.",
+        "Cross-Sectional Confirmation Strength": "The relative strength of volume confirmation within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_volatility_confirmation_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "confirmation",
+      "family": "volatility",
+      "name": "Cross-Sectional Volatility Confirmation Ranking",
+      "description": "Based on the original volatility-confirmation semantics, compares the strength of volatility release accompanying the event across instruments, and ranks or weights them at the same timestamp.",
+      "terms": {
+        "Volatility Confirmation": "The event is accompanied by changes in volatility magnitude or true range.",
+        "Relative Volatility Confirmation": "The strength of volatility confirmation within the cross section."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_range_expansion_confirmation_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "confirmation",
+      "family": "volatility",
+      "name": "Cross-Sectional Range Expansion Confirmation Ranking",
+      "description": "Based on the original range-expansion-confirmation semantics, compares the relative strength of price operating-range expansion across instruments.",
+      "terms": {
+        "Range Expansion Confirmation": "Expansion of the price operating range supports the event.",
+        "Cross-Sectional Expansion Strength": "The relative position of expansion magnitude within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_break_depth_sufficiency_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "strength",
+      "family": "depth",
+      "name": "Cross-Sectional Sufficient Break Depth Ranking",
+      "description": "Based on the original sufficient-break-depth semantics, compares the normalized magnitude by which price moves beyond a reference level or boundary across instruments.",
+      "terms": {
+        "Break Depth": "The magnitude by which price moves beyond a reference level or boundary.",
+        "Relative Depth": "The ranking of normalized break depth within the cross section."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_reclaim_depth_sufficiency_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "strength",
+      "family": "depth",
+      "name": "Cross-Sectional Sufficient Reclaim Depth Ranking",
+      "description": "Based on the original sufficient-reclaim-depth semantics, compares the normalized magnitude by which price moves back inside a reference level or boundary across instruments.",
+      "terms": {
+        "Reclaim Depth": "The magnitude by which price moves back inside a reference level or boundary.",
+        "Relative Depth": "The ranking of normalized reclaim depth within the cross section."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_efficiency_filter_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "filter",
+      "family": "noise",
+      "name": "Cross-Sectional Path Efficiency Filter Ranking",
+      "description": "Based on the original path-efficiency-filter semantics, compares efficiency as net displacement relative to path length across instruments, and mildly weights the event by relative efficiency.",
+      "terms": {
+        "Path Efficiency Filter": "Retaining or weighting the event based on net displacement relative to path length.",
+        "Cross-Sectional Efficiency": "The relative position of path efficiency within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_missing_data_robustness",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "robustness",
+      "family": "robustness",
+      "name": "Cross-Sectional Missing-Data Robustness",
+      "description": "Based on the original missing-data-robustness semantics, requires panel implementations to handle differences in listing history, missing coverage, and stagnant gaps across instruments, avoiding missingness patterns becoming the main cross-sectional signal.",
+      "terms": {
+        "Missing-Data Robustness": "Remaining robust under missing values, stagnant gaps, or differences in listing history.",
+        "Missingness Pattern": "Instrument differences caused by data unavailability rather than trading logic."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_close_strength_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "strength",
+      "family": "bar_shape",
+      "name": "Cross-Sectional Close Strength Ranking",
+      "description": "Based on the original close-strength semantics, compares the relative strength of closing position within the current bar or observation window across instruments.",
+      "terms": {
+        "Close Strength": "The relative position of the close within the current bar or observation window.",
+        "Cross-Sectional Strength": "The ranking of closing performance strength at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_body_strength_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "strength",
+      "family": "bar_shape",
+      "name": "Cross-Sectional Body Strength Ranking",
+      "description": "Based on the original body-strength semantics, compares the size of the candlestick body relative to its own recent state or the current bar range across instruments.",
+      "terms": {
+        "Body Strength": "The size of the candlestick body relative to its own recent state or the current bar range.",
+        "Cross-Sectional Body Strength": "The relative position of body strength within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_wick_noise_filter_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "cleanliness",
+      "family": "noise",
+      "name": "Cross-Sectional Wick Noise Ranking",
+      "description": "Based on the original wick-noise-filter semantics, compares the relative magnitude of wick proportion or wick disturbance across instruments, and reduces the weight of noisier instruments.",
+      "terms": {
+        "Wick Noise": "Wick proportion or wick disturbance.",
+        "Cross-Sectional Noise": "The relative position of noise within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_path_cleanliness_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "cleanliness",
+      "family": "noise",
+      "name": "Cross-Sectional Path Cleanliness Ranking",
+      "description": "Based on the original path-cleanliness semantics, compares whether price paths are direct and have limited back-and-forth movement across instruments, and weights the event by relative cleanliness.",
+      "terms": {
+        "Path Cleanliness": "Whether the price path is direct and has limited back-and-forth movement.",
+        "Cross-Sectional Cleanliness": "The relative position of path quality at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_self_normalized_magnitude_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "normalization",
+      "family": "normalization",
+      "name": "Cross-Sectional Self-Normalized Magnitude Ranking",
+      "description": "Based on the original self-normalized-magnitude semantics, first normalizes the variable relative to its own historical state, then compares strength across instruments at the same timestamp.",
+      "terms": {
+        "Self-Normalized Magnitude": "A variable's magnitude relative to its own historical state.",
+        "Cross-Sectional Comparison": "Comparing instrument strength after normalization."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_atr_normalized_distance_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "normalization",
+      "family": "normalization",
+      "name": "Cross-Sectional ATR-Normalized Distance Ranking",
+      "description": "Based on the original ATR-normalized-distance semantics, compares price distance, break depth, or reclaim depth after normalization in volatility units across instruments.",
+      "terms": {
+        "ATR-Normalized Distance": "Using volatility units to normalize price distance.",
+        "Cross-Sectional Distance": "The relative position of normalized distance within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_outlier_clipping",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "robustness",
+      "family": "robustness",
+      "name": "Cross-Sectional Outlier Clipping",
+      "description": "Based on the original outlier-clipping semantics, applies mild clipping to extreme cross-sectional inputs, intermediate variables, or outputs at each timestamp to reduce signal domination by a single instrument.",
+      "terms": {
+        "Outlier Clipping": "Mildly suppressing extreme inputs, intermediate variables, or outputs.",
+        "Cross-Sectional Extremes": "Values at the same timestamp that are clearly far from most instruments."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_level_acceptance_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "structure_interaction",
+      "family": "structure_interaction",
+      "name": "Cross-Sectional Level Acceptance Quality Ranking",
+      "description": "Based on the original level-acceptance-quality semantics, compares the relative degree to which price stays near, closes near, or repeatedly confirms a reference level across instruments.",
+      "terms": {
+        "Level Acceptance Quality": "Price stays near, closes near, or repeatedly confirms a reference level.",
+        "Cross-Sectional Acceptance": "The relative position of acceptance degree within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_level_rejection_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "structure_interaction",
+      "family": "structure_interaction",
+      "name": "Cross-Sectional Level Rejection Quality Ranking",
+      "description": "Based on the original level-rejection-quality semantics, compares the relative degree to which price quickly departs from or fails to stay after touching a reference level across instruments.",
+      "terms": {
+        "Level Rejection Quality": "Price quickly departs from or fails to stay after touching a reference level.",
+        "Cross-Sectional Rejection": "The relative position of rejection degree within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "quality.cross_section_volume_concentration_rank",
+      "category": "quality",
+      "scope": "cross_section",
+      "quality_type": "participation_structure",
+      "family": "participation_structure",
+      "name": "Cross-Sectional Volume Concentration Quality Ranking",
+      "description": "Based on the original volume-concentration-quality semantics, compares the relative degree to which trading participation is concentrated in the event area or key phase across instruments.",
+      "terms": {
+        "Volume Concentration Quality": "Trading participation is concentrated in the event area or key phase.",
+        "Cross-Sectional Concentration": "The relative position of concentration degree within the instrument universe."
+      }
+    },
+    {
+      "schema_id": "quality.turnover_confirmation",
+      "category": "quality",
+      "scope": "time_series",
+      "quality_type": "confirmation",
+      "family": "participation",
+      "name": "Turnover Confirmation",
+      "description": "Uses changes in turnover rate relative to its own recent state to confirm whether the event is supported by genuine trading participation.",
+      "terms": {
+        "Turnover Confirmation": "Changes in turnover_rate form a supportive relationship with the price behavior expressed by the event.",
+        "Own Recent State": "The stock's turnover-rate level or quantile within its own historical window."
+      }
+    },
+    {
+      "schema_id": "quality.amount_confirmation",
+      "category": "quality",
+      "scope": "time_series",
+      "quality_type": "confirmation",
+      "family": "participation",
+      "name": "Traded Amount Confirmation",
+      "description": "Uses changes in traded amount relative to its own recent state to confirm whether the event is supported by capital participation.",
+      "terms": {
+        "Traded Amount Confirmation": "Changes in standardized traded amount form a supportive relationship with the price behavior expressed by the event.",
+        "Traded Amount Field": "amount, turnover_value, or deal_amount."
+      }
+    },
+    {
+      "schema_id": "quality.high_turnover_noise_filter",
+      "category": "quality",
+      "scope": "time_series",
+      "quality_type": "filter",
+      "family": "participation",
+      "name": "High-Turnover Noise Filter",
+      "description": "When turnover rate is extremely high but net price displacement, close strength, or path efficiency is insufficient, downweights the event to avoid mistaking trading crowding itself for effective progression.",
+      "terms": {
+        "High-Turnover Noise": "High turnover_rate does not produce proportionate effective price results.",
+        "Filter": "Reducing the weight of events with heavy input but weak price results."
+      }
+    },
+    {
+      "schema_id": "quality.amount_efficiency_confirmation",
+      "category": "quality",
+      "scope": "time_series",
+      "quality_type": "efficiency",
+      "family": "participation",
+      "name": "Traded Amount Efficiency Confirmation",
+      "description": "Confirms the input-output efficiency of an event based on the proportional relationship between effective price progression and standardized traded-amount input.",
+      "terms": {
+        "Effective Price Progression": "Price outcomes such as net displacement, breakout depth, or directional close.",
+        "Traded Amount Efficiency": "The relationship between effective price progression and traded-amount input standardized by its own history."
+      }
+    },
+    {
+      "schema_id": "quality.vwap_hold_persistence",
+      "category": "quality",
+      "scope": "time_series",
+      "quality_type": "persistence",
+      "family": "structure_interaction",
+      "name": "VWAP Hold Persistence",
+      "description": "Weights the quality of reclaim and rejection events based on the extent to which price continues to close or stay on the target side after crossing VWAP.",
+      "terms": {
+        "VWAP Hold": "After crossing, price continues to remain on the target side of VWAP.",
+        "Persistence": "The proportion or consecutive length satisfying the hold condition within a finite historical window."
+      }
+    },
+    {
+      "schema_id": "quality.prior_close_acceptance",
+      "category": "quality",
+      "scope": "time_series",
+      "quality_type": "structure_interaction",
+      "family": "structure_interaction",
+      "name": "Prior-Close Anchor Acceptance Quality",
+      "description": "Weights prior-close anchor interaction events based on the extent to which price closes, stays, or continues to progress on the target side after crossing the prior close.",
+      "terms": {
+        "Prior-Close Anchor": "pre_close or act_pre_close consistent with the price adjustment convention.",
+        "Acceptance Quality": "The extent to which price holds on the target side after crossing and forms effective closes."
+      }
+    },
+    {
+      "schema_id": "quality.high_range_close_acceptance",
+      "category": "quality",
+      "scope": "time_series",
+      "quality_type": "structure_interaction",
+      "family": "close_position",
+      "name": "High-Range Close Acceptance Quality",
+      "description": "Weights high-level acceptance events based on closing strength in the upper quantile of the recent range, persistence of staying there, and drawdown magnitude.",
+      "terms": {
+        "High-Range Close": "close is located in the upper-quantile area of its own recent rolling range.",
+        "Acceptance Quality": "The strength and persistence of the high-range close, and the degree to which subsequent drawdown is controlled."
+      }
+    },
+    {
+      "schema_id": "quality.opening_gap_robustness_filter",
+      "category": "quality",
+      "scope": "time_series",
+      "quality_type": "robustness",
+      "family": "gap",
+      "name": "Opening Gap Robustness Filter",
+      "description": "Uses prior close, open price, and recent volatility scale to identify valid gaps, and filters pseudo-gaps caused by adjustment switches, price-limit moves, trading resumption, or extreme anomalies.",
+      "terms": {
+        "Normalized Gap": "The distance of open relative to convention-consistent pre_close or act_pre_close, normalized by its own recent volatility scale.",
+        "Pseudo-Gap": "A jump caused by data anomalies, adjustment handling, or special trading states rather than normal price discovery."
+      }
+    }
+  ]
+}

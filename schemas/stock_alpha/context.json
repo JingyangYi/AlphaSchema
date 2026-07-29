@@ -1,0 +1,563 @@
+{
+  "version": "stock_alpha_extended_v1",
+  "category": "context",
+  "description": "Fully inherits stock_alpha_v1 and adds background related to prior close, dual anchors with VWAP, and stock trading activity.",
+  "schemas": [
+    {
+      "schema_id": "context.pivot_high_zone",
+      "category": "context",
+      "family": "location",
+      "name": "Pivot High Zone",
+      "description": "Characterizes the price location where the event occurs near a recently confirmed swing high.",
+      "terms": {
+        "Pivot High": "A local high confirmed by price swing structure.",
+        "Near": "The area where price is close to the reference level; the exact width is determined at implementation time."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.pivot_low_zone",
+      "category": "context",
+      "family": "location",
+      "name": "Pivot Low Zone",
+      "description": "Characterizes the price location where the event occurs near a recently confirmed swing low.",
+      "terms": {
+        "Pivot Low": "A local low confirmed by price swing structure.",
+        "Near": "The area where price is close to the reference level; the exact width is determined at implementation time."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.range_upper_boundary",
+      "category": "context",
+      "family": "location",
+      "name": "Range Upper Boundary Position",
+      "description": "Characterizes the price location where the event occurs near the upper boundary of the recent price range.",
+      "terms": {
+        "Recent Price Range": "The price range formed by the highest and lowest prices within an observation window.",
+        "Range Upper Boundary": "The upper boundary of the recent price range."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.range_lower_boundary",
+      "category": "context",
+      "family": "location",
+      "name": "Range Lower Boundary Position",
+      "description": "Characterizes the price location where the event occurs near the lower boundary of the recent price range.",
+      "terms": {
+        "Recent Price Range": "The price range formed by the highest and lowest prices within an observation window.",
+        "Range Lower Boundary": "The lower boundary of the recent price range."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.range_midline_zone",
+      "category": "context",
+      "family": "location",
+      "name": "Range Midline Position",
+      "description": "Characterizes the price location where the event occurs near the midline of the recent price range.",
+      "terms": {
+        "Range Midline": "The midpoint between the upper and lower boundaries of the recent price range.",
+        "Recent Price Range": "The price range formed by the highest and lowest prices within an observation window."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.channel_upper_boundary",
+      "category": "context",
+      "family": "location",
+      "name": "Channel Upper Boundary Position",
+      "description": "Characterizes the price location where the event occurs near the upper boundary of a price channel, regression channel, or volatility channel.",
+      "terms": {
+        "Price Channel": "The upper and lower boundaries constructed from price highs and lows, a regression line, or a volatility range.",
+        "Channel Upper Boundary": "The upper boundary of the price channel."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.channel_lower_boundary",
+      "category": "context",
+      "family": "location",
+      "name": "Channel Lower Boundary Position",
+      "description": "Characterizes the price location where the event occurs near the lower boundary of a price channel, regression channel, or volatility channel.",
+      "terms": {
+        "Price Channel": "The upper and lower boundaries constructed from price highs and lows, a regression line, or a volatility range.",
+        "Channel Lower Boundary": "The lower boundary of the price channel."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.vwap_near_zone",
+      "category": "context",
+      "family": "location",
+      "name": "VWAP Near Zone",
+      "description": "Characterizes the price location where the event occurs near VWAP.",
+      "terms": {
+        "VWAP": "Volume-weighted average price.",
+        "VWAP Near": "The area where price is close to VWAP; the exact width is determined at implementation time."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.moving_average_near_zone",
+      "category": "context",
+      "family": "location",
+      "name": "Moving Average Near Zone",
+      "description": "Characterizes the price location where the event occurs near a price moving average.",
+      "terms": {
+        "Moving Average": "A moving average derived by smoothing the price series.",
+        "Moving Average Near": "The area where price is close to the moving average; the exact width is determined at implementation time."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.session_extreme_zone",
+      "category": "context",
+      "family": "location",
+      "name": "Session Extreme Position",
+      "description": "Characterizes the price location where the event occurs near the high or low of the current or recent trading session.",
+      "terms": {
+        "Session High": "The highest price formed within a trading session.",
+        "Session Low": "The lowest price formed within a trading session.",
+        "Trading Session": "The day session, night session, or another continuous trading interval."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.volume_profile_value_area",
+      "category": "context",
+      "family": "location",
+      "name": "Volume Value Area",
+      "description": "Characterizes the price area where the event occurs within a region of relatively concentrated recent trading activity.",
+      "terms": {
+        "Volume Value Area": "A price area with relatively concentrated recent trading activity along the price dimension.",
+        "Trading Activity": "The scale of market participation represented by volume, turnover, or similar variables."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.prior_close_reference",
+      "category": "context",
+      "family": "location",
+      "name": "Prior Close Reference Position",
+      "description": "Characterizes the price location where the event occurs near the prior trading phase close or an adjacent-phase reference price.",
+      "terms": {
+        "Prior Close": "The closing price of the prior trading phase or prior trading day.",
+        "Reference Price": "A price reference used to connect adjacent trading phases."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.discount_zone",
+      "category": "context",
+      "family": "zone",
+      "name": "Discount Zone",
+      "description": "Characterizes the event occurring in a relatively low area of the recent reference range.",
+      "terms": {
+        "Discount Zone": "A position where price is relatively low versus the recent reference range.",
+        "Recent Reference Range": "A price range formed from recent price highs and lows, a channel, or another structural reference."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.premium_zone",
+      "category": "context",
+      "family": "zone",
+      "name": "Premium Zone",
+      "description": "Characterizes the event occurring in a relatively high area of the recent reference range.",
+      "terms": {
+        "Premium Zone": "A position where price is relatively high versus the recent reference range.",
+        "Recent Reference Range": "A price range formed from recent price highs and lows, a channel, or another structural reference."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.equilibrium_zone",
+      "category": "context",
+      "family": "zone",
+      "name": "Equilibrium Zone",
+      "description": "Characterizes the event occurring in a neutral area near the recent reference range or an equilibrium reference.",
+      "terms": {
+        "Equilibrium Zone": "A position where price lies near the middle of the recent reference range or near an equilibrium reference.",
+        "Equilibrium Reference": "A price moving average, VWAP, range midline, or another level that can represent recent equilibrium."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.range_upper_percentile",
+      "category": "context",
+      "family": "zone",
+      "name": "Upper Percentile Range Zone",
+      "description": "Characterizes the event occurring in the upper percentile zone of the recent price range.",
+      "terms": {
+        "Range Percentile": "The proportional position of the current price within the upper and lower boundaries of the recent range.",
+        "Upper Percentile Zone": "A relative position where price is close to the upper side of the recent range."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.range_lower_percentile",
+      "category": "context",
+      "family": "zone",
+      "name": "Lower Percentile Range Zone",
+      "description": "Characterizes the event occurring in the lower percentile zone of the recent price range.",
+      "terms": {
+        "Range Percentile": "The proportional position of the current price within the upper and lower boundaries of the recent range.",
+        "Lower Percentile Zone": "A relative position where price is close to the lower side of the recent range."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.oscillator_upper_zone",
+      "category": "context",
+      "family": "zone",
+      "name": "Oscillator Upper Zone",
+      "description": "Characterizes the event occurring when the oscillator is in a high zone relative to its own recent state.",
+      "terms": {
+        "Oscillator": "A momentum or overbought/oversold indicator constructed from the price series.",
+        "Upper Zone": "A position where the oscillator is relatively high versus its own recent state."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.oscillator_lower_zone",
+      "category": "context",
+      "family": "zone",
+      "name": "Oscillator Lower Zone",
+      "description": "Characterizes the event occurring when the oscillator is in a low zone relative to its own recent state.",
+      "terms": {
+        "Oscillator": "A momentum or overbought/oversold indicator constructed from the price series.",
+        "Lower Zone": "A position where the oscillator is relatively low versus its own recent state."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.oscillator_midline_zone",
+      "category": "context",
+      "family": "zone",
+      "name": "Oscillator Midline Zone",
+      "description": "Characterizes the event occurring when the oscillator is near its own midline.",
+      "terms": {
+        "Oscillator": "A momentum or overbought/oversold indicator constructed from the price series.",
+        "Midline": "The neutral reference level of the oscillator."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.positive_deviation_zone",
+      "category": "context",
+      "family": "zone",
+      "name": "Positive Deviation Zone",
+      "description": "Characterizes the event occurring in a zone where price is positively deviated from an equilibrium reference.",
+      "terms": {
+        "Positive Deviation": "Price is above the equilibrium reference with a measurable distance.",
+        "Equilibrium Reference": "A price moving average, VWAP, range midline, or another level that can represent recent equilibrium."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.negative_deviation_zone",
+      "category": "context",
+      "family": "zone",
+      "name": "Negative Deviation Zone",
+      "description": "Characterizes the event occurring in a zone where price is negatively deviated from an equilibrium reference.",
+      "terms": {
+        "Negative Deviation": "Price is below the equilibrium reference with a measurable distance.",
+        "Equilibrium Reference": "A price moving average, VWAP, range midline, or another level that can represent recent equilibrium."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.opening_phase",
+      "category": "context",
+      "family": "time_scale",
+      "disabled": true,
+      "disabled_reason": "The opening-phase slice is temporarily disabled in 1d run to avoid implementation failure when reliable bar time semantics are unavailable.",
+      "name": "Opening Phase",
+      "description": "Characterizes the time slice where the event occurs near the start of the trading session.",
+      "terms": {
+        "Opening Phase": "An early period after the start of the trading session.",
+        "Trading Session": "The day session, night session, or another continuous trading interval."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.closing_phase",
+      "category": "context",
+      "family": "time_scale",
+      "disabled": true,
+      "disabled_reason": "The closing-phase slice is temporarily disabled in 1d run to avoid implementation failure when reliable bar time semantics are unavailable.",
+      "name": "Closing Phase",
+      "description": "Characterizes the time slice where the event occurs near the end of the trading session.",
+      "terms": {
+        "Closing Phase": "A late period before the end of the trading session.",
+        "Trading Session": "The day session, night session, or another continuous trading interval."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.session_transition",
+      "category": "context",
+      "family": "time_scale",
+      "disabled": true,
+      "disabled_reason": "The session-transition slice is temporarily disabled in 1d run to avoid implementation failure when reliable session boundary semantics are unavailable.",
+      "name": "Session Transition",
+      "description": "Characterizes the event occurring near transitions between trading sessions such as day session, night session, or after a midday break.",
+      "terms": {
+        "Session Transition": "The phase of starting, ending, or reopening between different trading sessions.",
+        "Reopening": "The phase when trading resumes after a market break."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.multi_session_reference",
+      "category": "context",
+      "family": "time_scale",
+      "name": "Multi-Session Reference",
+      "description": "Characterizes the event occurring within a price reference cumulatively formed across multiple trading sessions.",
+      "terms": {
+        "Multi-Session": "An observation span across multiple day sessions, night sessions, or trading days.",
+        "Cumulative Reference": "Highs, lows, midlines, or reference prices formed jointly by multiple trading sessions."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.higher_timeframe_range_position",
+      "category": "context",
+      "family": "time_scale",
+      "name": "Higher-Timeframe Range Position",
+      "description": "Characterizes the relative position of the event within a price range on a higher time scale.",
+      "terms": {
+        "Higher Timeframe": "A longer time scale relative to the current bar.",
+        "Higher-Timeframe Range": "The high-low price range formed on a longer time scale."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.low_volatility_regime",
+      "category": "context",
+      "family": "volatility_regime",
+      "name": "Low-Volatility Regime",
+      "description": "Characterizes the event occurring under a lower-volatility regime.",
+      "terms": {
+        "Low-Volatility Regime": "A state where true range, return volatility, or range width is at a relatively low position in its own rolling distribution."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.high_volatility_regime",
+      "category": "context",
+      "family": "volatility_regime",
+      "name": "High-Volatility Regime",
+      "description": "Characterizes the event occurring under a higher-volatility regime.",
+      "terms": {
+        "High-Volatility Regime": "A state where true range, return volatility, or range width is at a relatively high position in its own rolling distribution."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.strong_trend_state",
+      "category": "context",
+      "family": "trend_state",
+      "name": "Strong Trend State",
+      "description": "Characterizes the event occurring in a background where trend strength over a longer window is relatively high.",
+      "terms": {
+        "Trend Strength": "Measured by long-window returns, moving-average slope, high-low structure, or trend efficiency."
+      },
+      "scope": "time_series"
+    },
+    {
+      "schema_id": "context.cross_section_range_position_rank",
+      "category": "context",
+      "scope": "cross_section",
+      "family": "zone",
+      "name": "Cross-Sectional Range Position Ranking Context",
+      "description": "Based on the existing semantics of upper-percentile range zone, lower-percentile range zone, and equilibrium zone, compares each instrument's current price position within its own recent range.",
+      "terms": {
+        "Range Position": "The percentile or relative position of price within its own recent range.",
+        "Cross-Sectional Context": "Comparing the position levels of each instrument at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "context.cross_section_deviation_zone_rank",
+      "category": "context",
+      "scope": "cross_section",
+      "family": "zone",
+      "name": "Cross-Sectional Deviation Position Ranking Context",
+      "description": "Based on the existing semantics of positive deviation zone and negative deviation zone, compares the standardized deviation of each instrument's price relative to its own equilibrium reference.",
+      "terms": {
+        "Deviation Position": "The standardized distance of price relative to the equilibrium reference.",
+        "Cross-Sectional Deviation": "Comparing the degree of deviation across instruments at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "context.cross_section_oscillator_zone_rank",
+      "category": "context",
+      "scope": "cross_section",
+      "family": "zone",
+      "name": "Cross-Sectional Oscillator Position Ranking Context",
+      "description": "Based on the existing semantics of oscillator upper zone, lower zone, and midline zone, compares the relative oscillator position of each instrument at the same timestamp.",
+      "terms": {
+        "Oscillator Position": "The position of the oscillator relative to its own recent state or midline.",
+        "Cross-Sectional Ranking": "Comparing oscillator positions across instruments at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "context.cross_section_reference_distance_rank",
+      "category": "context",
+      "scope": "cross_section",
+      "family": "location",
+      "name": "Cross-Sectional Reference Distance Ranking Context",
+      "description": "Based on the existing reference-location semantics of pivot, channel, VWAP, moving average, and similar references, compares the standardized distance between each instrument's event and its own reference level.",
+      "terms": {
+        "Reference Distance": "The standardized distance between the event and the instrument's own reference levels such as pivot, channel, VWAP, and moving average.",
+        "Relative Position Context": "Comparing distance or closeness across instruments at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "context.cross_section_vwap_distance_rank",
+      "category": "context",
+      "scope": "cross_section",
+      "family": "location",
+      "name": "Cross-Sectional VWAP Distance Ranking Context",
+      "description": "Based on the existing semantics of VWAP near zone, compares the standardized distance of each instrument's price relative to its own VWAP or the degree of reclaim.",
+      "terms": {
+        "VWAP Distance": "The standardized distance of price relative to VWAP.",
+        "Cross-Sectional Distance": "Comparing distance or reclaim degree across instruments at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "context.cross_section_moving_average_distance_rank",
+      "category": "context",
+      "scope": "cross_section",
+      "family": "location",
+      "name": "Cross-Sectional Moving Average Distance Ranking Context",
+      "description": "Based on the existing semantics of moving average near zone, compares the standardized distance of each instrument's price relative to its own moving average or moving-average band.",
+      "terms": {
+        "Moving Average Distance": "The standardized distance of price relative to the moving average or moving-average band.",
+        "Cross-Sectional Distance": "Comparing distance across instruments at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "context.cross_section_session_extreme_rank",
+      "category": "context",
+      "scope": "cross_section",
+      "family": "location",
+      "name": "Cross-Sectional Session Extreme Position Ranking Context",
+      "description": "Based on the existing semantics of session extreme position, compares the relative degree to which each instrument's price is close to the high or low of the current or recent session.",
+      "terms": {
+        "Session Extreme": "The high or low of the current or recent trading session.",
+        "Cross-Sectional Closeness": "Comparing how close each instrument is to the extreme at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "context.cross_section_premium_discount_rank",
+      "category": "context",
+      "scope": "cross_section",
+      "family": "zone",
+      "name": "Cross-Sectional Premium/Discount Ranking Context",
+      "description": "Based on the existing semantics of premium zone and discount zone, compares the relative degree to which each instrument's price is in a high or low position within its own reference range.",
+      "terms": {
+        "Premium/Discount": "The relatively high or low area of price within its own reference range.",
+        "Cross-Sectional Ranking": "Comparing the high-low positions of each instrument at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "context.cross_section_volume_profile_value_rank",
+      "category": "context",
+      "scope": "cross_section",
+      "family": "location",
+      "name": "Cross-Sectional Volume Value Area Ranking Context",
+      "description": "Based on the existing semantics of volume value area, compares the degree to which each instrument's event location is close to or deviates from its own recent concentrated trading area.",
+      "terms": {
+        "Volume Value Area": "A price area with relatively concentrated recent trading activity.",
+        "Cross-Sectional Value Distance": "Comparing the degree of distance from the volume value area across instruments at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "context.cross_section_higher_timeframe_position_rank",
+      "category": "context",
+      "scope": "cross_section",
+      "family": "time_scale",
+      "name": "Cross-Sectional Higher-Timeframe Position Ranking Context",
+      "description": "Based on the existing semantics of higher-timeframe range position, compares the relative position of each instrument within a higher-timeframe price range.",
+      "terms": {
+        "Higher-Timeframe Range Position": "The relative position of price within a higher-timeframe range.",
+        "Cross-Sectional Higher-Timeframe Context": "Comparing higher-timeframe positions across instruments at the same timestamp."
+      }
+    },
+    {
+      "schema_id": "context.above_prior_close_zone",
+      "category": "context",
+      "scope": "time_series",
+      "family": "anchor_zone",
+      "name": "Above Prior Close Zone",
+      "description": "Characterizes the state where price is above the prior trading day's close when the event occurs, and allows deviation to be measured using the instrument's own volatility scale.",
+      "terms": {
+        "Above Prior Close": "The current price or close is above the pre_close or act_pre_close that matches its adjustment basis.",
+        "Deviation Scale": "The magnitude of the distance between price and the prior close relative to the instrument's own recent volatility."
+      }
+    },
+    {
+      "schema_id": "context.below_prior_close_zone",
+      "category": "context",
+      "scope": "time_series",
+      "family": "anchor_zone",
+      "name": "Below Prior Close Zone",
+      "description": "Characterizes the state where price is below the prior trading day's close when the event occurs, and allows deviation to be measured using the instrument's own volatility scale.",
+      "terms": {
+        "Below Prior Close": "The current price or close is below the pre_close or act_pre_close that matches its adjustment basis.",
+        "Deviation Scale": "The magnitude of the distance between price and the prior close relative to the instrument's own recent volatility."
+      }
+    },
+    {
+      "schema_id": "context.vwap_prior_close_interstitial_zone",
+      "category": "context",
+      "scope": "time_series",
+      "family": "anchor_zone",
+      "name": "VWAP-Prior Close Interstitial Zone",
+      "description": "Characterizes the transitional state where price lies between VWAP and the prior close, without having crossed both anchors simultaneously.",
+      "terms": {
+        "Dual-Anchor Interstitial": "Price lies between the upper and lower boundaries formed by vwap and the basis-consistent pre_close or act_pre_close.",
+        "Transitional State": "Price has crossed only one of the two anchors, so directional confirmation remains incomplete."
+      }
+    },
+    {
+      "schema_id": "context.high_range_premium_acceptance_zone",
+      "category": "context",
+      "scope": "time_series",
+      "family": "zone",
+      "name": "High-Range Premium Acceptance Zone",
+      "description": "Characterizes the background where price is in the upper percentile of the recent range and continues to hold there, distinguishing high-level acceptance from a one-off spike.",
+      "terms": {
+        "High-Range Premium": "Price is in the upper percentile of its own recent rolling range.",
+        "Zone Acceptance": "Price remains in that upper zone over a limited window."
+      }
+    },
+    {
+      "schema_id": "context.high_turnover_regime",
+      "category": "context",
+      "scope": "time_series",
+      "family": "participation_regime",
+      "name": "High Turnover Regime",
+      "description": "Characterizes the trading-participation state where a stock's turnover rate is relatively high versus its own recent history.",
+      "terms": {
+        "Turnover Rate": "turnover_rate, representing the ratio of traded shares to tradable share capital.",
+        "High Turnover Regime": "A state where turnover rate is in a relatively high percentile of its own recent history."
+      }
+    },
+    {
+      "schema_id": "context.active_amount_regime",
+      "category": "context",
+      "scope": "time_series",
+      "family": "participation_regime",
+      "name": "Active Turnover Value Regime",
+      "description": "Characterizes the capital-participation background where turnover value, after standardization against its own history, is at an active level.",
+      "terms": {
+        "Turnover Value": "amount, turnover_value, or deal_amount.",
+        "Active Regime": "A state where turnover value is significantly elevated relative to its own recent history."
+      }
+    }
+  ]
+}
